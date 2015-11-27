@@ -43,12 +43,12 @@ BigNumber::BigNumber(const BigNumber& b) {
     ba = new base[len];
     bn = ba;
     ea = en = ba + len - 1;
-    for (base *tmp1 = bn, *tmp2 = b.bn; tmp1 <= en; ++tmp1, ++tmp2){
+    for (base *tmp1 = bn, *tmp2 = b.bn; tmp1 <= en; ++tmp1, ++tmp2) {
         *tmp1 = *tmp2;
     }
 }
 
-BigNumber::operator=(const BigNumber& b) {
+BigNumber::operator = (const BigNumber& b) {
     if (this == &b) return;
     if (b.ba == nullptr) {
         bn = en = ea = ba = nullptr;
@@ -58,8 +58,46 @@ BigNumber::operator=(const BigNumber& b) {
     ba = new base[len];
     bn = ba;
     ea = en = ba + len - 1;
-    for (base *tmp1 = bn, *tmp2 = b.bn; tmp1 <= en; ++tmp1, ++tmp2){
+    for (base *tmp1 = bn, *tmp2 = b.bn; tmp1 <= en; ++tmp1, ++tmp2) {
         *tmp1 = *tmp2;
     }
 
+}
+
+BigNumber::Compare(const BigNumber& b) {
+    if ((bn - en) == (b.bn - b.en)) {
+        for (base *tmp1 = bn, *tmp2 = b.bn; tmp1 >= en; --tmp1, --tmp2) {
+            if (*tmp1 > *tmp2) return 1;
+            if (*tmp1 < *tmp2) return -1;
+    }
+        return 0;
+}
+    else {
+        if ((bn - en) > (b.bn - b.en)) return 1;
+        else return -1;
+    }
+}
+
+bool BigNumber::operator < (const BigNumber& b) {
+    return (Compare(b) == -1);
+}
+
+bool BigNumber::operator > (const BigNumber& b) {
+    return (Compare(b) == 1);
+}
+
+bool BigNumber::operator >= (const BigNumber& b) {
+    return (Compare(b) == 1 || Compare(b) == 0);
+}
+
+bool BigNumber::operator <= (const BigNumber& b) {
+    return (Compare(b) == -1 || Compare(b) == 0);
+}
+
+bool BigNumber::operator == (const BigNumber& b) {
+    return (Compare(b) == 0);
+}
+
+bool BigNumber::operator != (const BigNumber& b) {
+    return (Compare(b) != 0);
 }
