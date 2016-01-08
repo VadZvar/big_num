@@ -1,7 +1,6 @@
 #include <iostream>
 #include <big_num.h>
 
-
 BigNumber::BigNumber() {
     bn = en = ea = ba = nullptr;
 }
@@ -48,11 +47,11 @@ BigNumber::BigNumber(const BigNumber& b) {
     }
 }
 
-BigNumber::operator = (const BigNumber& b) {
-    if (this == &b) return;
+BigNumber & BigNumber::operator=(const BigNumber& b) {
+    if (this == &b) return *this;
     if (b.ba == nullptr) {
         bn = en = ea = ba = nullptr;
-        return;
+        return *this;
     }
     size_t len = b.en - b.bn + 1;
     ba = new base[len];
@@ -64,7 +63,7 @@ BigNumber::operator = (const BigNumber& b) {
 
 }
 
-BigNumber::Compare(const BigNumber& b) {
+int BigNumber::Compare(const BigNumber& b) {
     if ((en - bn) == (b.en - b.bn)) {
         for (base *tmp1 = en, *tmp2 = b.en; tmp1 >= bn; --tmp1, --tmp2) {
             if (*tmp1 > *tmp2) return 1;
@@ -102,7 +101,7 @@ bool BigNumber::operator != (const BigNumber& b) {
     return (Compare(b) != 0);
 }
 
-BigNumber BigNumber::operator + (const BigNumber& b) {
+BigNumber BigNumber::operator+(const BigNumber& b) const {
     size_t size_max;
     size_t size_min;
     int i;
@@ -139,10 +138,11 @@ BigNumber BigNumber::operator + (const BigNumber& b) {
     return res;
 }
 
-BigNumber BigNumber::operator - (const BigNumber& b) {
-    if (*this < b) throw "< 0";
+BigNumber BigNumber::operator-(const BigNumber& b) const {
+    //if (*this < b) throw "< 0";
     size_t size_a = en - bn + 1;
     size_t size_b = b.en - b.bn + 1;
+    if (size_b > size_a) throw "<0";
     int i;
     dbase buffer = 0;
     BigNumber res(size_a, 0);
@@ -163,10 +163,11 @@ BigNumber BigNumber::operator - (const BigNumber& b) {
         res.en = res.bn + size_a - 2;
         for (; *res.en == 0 && res.en > res.bn; --res.en);
     } else res.en = res.bn + size_a - 1;
+
     return res;
 }
 
-void BigNumber::plus (const BigNumber& b, BigNumber& res) const {
+void BigNumber::plus(const BigNumber& b, BigNumber& res) const {
     size_t size_max;
     size_t size_min;
     base *max, *min;
@@ -181,7 +182,7 @@ void BigNumber::plus (const BigNumber& b, BigNumber& res) const {
         size_max = b.en - b.bn + 1;
         size_min = en - bn + 1;
         max = b.bn;
-        mib = bn;
+        min = bn;
     }
 
     dbase buffer = 0;
@@ -203,7 +204,7 @@ void BigNumber::plus (const BigNumber& b, BigNumber& res) const {
     return;
 }
 
-BigNumber BigNumber::operator += (const BigNumber& b) {
+BigNumber & BigNumber::operator += (const BigNumber& b) {
     ReSize(*this, en - bn + 2);
     this -> plus(b, *this);
     return *this;
@@ -215,7 +216,7 @@ void BigNumber::minus(const BigNumber& b, BigNumber& res) {
     if (size_b > size_a) throw "< 0";
     int i;
     dbase buffer = 0;
-    BigNumber res(*this);
+    //BigNumber res(*this);
 
     for (i = 0; i < size_b; ++i) {
         buffer = (dbase)bn[i] - (dbase)b.bn[i] - buffer;
@@ -241,7 +242,7 @@ void BigNumber::minus(const BigNumber& b, BigNumber& res) {
     return;
 }
 
-BigNumber BigNumber::operator -= (const BigNumber& b) {
+BigNumber & BigNumber::operator -= (const BigNumber& b) {
     this -> minus(b, *this);
     return *this;
 }
@@ -255,7 +256,7 @@ void BigNumber::ReSize(BigNumber& b, size_t new_size) {
     if (new_size > size_b) {
         if (new_size > b.ea - b.ba + 1) {
             base * a = new base[new_size];
-            if(!a) throw ALLOW_ERR;
+            if(!a) throw ALLOC_ERR;
             for (i = 0;i < size_b; ++i) {
                 a[i] = b.bn[i];
             }
@@ -271,7 +272,7 @@ void BigNumber::ReSize(BigNumber& b, size_t new_size) {
             for (i = 0; i < size_b; ++i) {
                 b.ba[i] = b.bn[i];
             }
-            for (base * tmp = b.ba + i; tmp <= b.ea; *tmp = 0, ++tmp;){
+            for (base * tmp = b.ba + i; tmp <= b.ea; *tmp = 0, ++tmp){
                 b.ba[i] = 0;
                 b.en = b.ba + size_b - 1;
             }
@@ -279,7 +280,7 @@ void BigNumber::ReSize(BigNumber& b, size_t new_size) {
     }
 }
 
-BigNumber BigNumber::operator * (const BigNumber& b) {
+BigNumber BigNumber::operator * (BigNumber& b) {
     return this -> Usual_mul(b);
 }
 
@@ -314,7 +315,7 @@ BigNumber BigNumber::Usual_mul (BigNumber &b) {
     return res;
 }
 
-BigNumber BigNumber::operator >> (const BigNumber& b) {
+BigNumber BigNumber::operator >> (int num) const{
     
     if (num < 0 || num > BBITS - 1) throw "so big";
 
@@ -333,7 +334,7 @@ BigNumber BigNumber::operator >> (const BigNumber& b) {
     return res;
 }
 
-BigNumber BigNumber::operator << (const BigNumber& b) {
+BigNumber BigNumber::operator << (int num) const {
     
     if (num < 0 || num > BBITS - 1) throw "so big";
 
@@ -356,7 +357,7 @@ BigNumber BigNumber::operator << (const BigNumber& b) {
     return res;
 }
 
-void BigNumber::division_base(BigNumber& a, base b, BigNumber& q, base r) {
+void BigNumber::division_base(const BigNumber& a, base b, BigNumber *q, base *r) {
     if (b == 0) throw "division by zero";
 
     dbase buffer = 0, tmp;
@@ -386,7 +387,7 @@ void BigNumber::division_base(BigNumber& a, base b, BigNumber& q, base r) {
         }
     }
 
-    if (q) BigNumber::ReSize(q, size_a);
+    if (q) BigNumber::ReSize(*q, size_a);
 
     for (int j = size_a - 1; j >= 0; --j) {
         buffer = (buffer << BBITS) | a.bn[j];
@@ -408,8 +409,8 @@ void BigNumber::division_base(BigNumber& a, base b, BigNumber& q, base r) {
 }
 
 BigNumber BigNumber::operator / (base b) const {
-    BigNumber res(en + bn - 1, 0);
-    division_base(*this, b, nullptr, &res);
+    BigNumber res(en - bn + 1, 0);
+    division_base(*this, b, &res, nullptr);
     return res;
 }
 
@@ -437,33 +438,43 @@ BigNumber BigNumber::operator * (base b) {
     return res;
 }
 
-BigNumber::BigNumber(const std::string & str) {
+BigNumber & BigNumber::operator *= (base b) {
+    dbase buffer = 0;
     int i;
-    en = bn = ba = new base[str.size() / 4 + 1];
-    ea = ba + str.size() / 4;
-    *bn = 0;
-
-    for (i = 0; i < str.size(); ++i) {
-        if (str[i] < '0' || str > '9') {
-            throw "bad string";
-        }
-        *this *= (base)10;
-        *this += (base)(str[i] - '0');
+    size_t  size_a = en - bn + 1;
+    
+    if (b == 0 || size_a == 1 && *bn == 0) {
+        return *this;
     }
+
+    BigNumber::ReSize(*this, size_a + 1);
+
+    for (i = 0; i < size_a; ++i) {
+        buffer += (dbase)bn[i] * b;
+        bn[i] = buffer;
+        buffer >>= BBITS;
+    }
+    if (buffer) {
+        bn[size_a] = buffer;
+        en = bn + size_a;
+    }
+    else en = bn + size_a - 1;
+
+    return *this;
 }
 
 std::istream & operator >> (std::istream& in, BigNumber& b) {
     std::string str;
     int i;
     in >> str;
-    BigNumber ReSize(b, str.size() / 4 + 1);
+    BigNumber::ReSize(b, str.size() / 4 + 1);
 
     for (i = 0; i < str.size(); ++i) {
         b.bn[i] = 0;
     }
     b.en = b.bn;
     for (i = 0; i < str.size(); ++i) {
-        if (str[i] < '0' || str > '9') {
+        if (str[i] < '0' || str[i] > '9') {
             throw "bad string";
         }
         b *= (base)10;
@@ -473,7 +484,22 @@ std::istream & operator >> (std::istream& in, BigNumber& b) {
     return in;
 }
 
-std::ostream & operator << (std::ostream& in, BigNumber b) {
+BigNumber::BigNumber(const std::string & str) {
+    int i;
+    en = bn = ba = new base[str.size() / 4 + 1];
+    ea = ba + str.size() / 4;
+    *bn = 0;
+
+    for (i = 0; i < str.size(); ++i) {
+        if (str[i] < '0' || str[i] > '9') {
+            throw "bad string";
+        }
+        *this *= (base)10;
+        *this += (base)(str[i] - '0');
+    }
+}
+
+std::ostream & operator << (std::ostream& out, BigNumber b) {
     std::stack<char> st;
     BigNumber copy(b);
     base num;
@@ -483,7 +509,7 @@ std::ostream & operator << (std::ostream& in, BigNumber b) {
         return out;
     }
 
-    for (;copy.en - copy.bn > || *copy.bn;) {
+    for (;copy.en - copy.bn > 0 || *copy.bn;) {
         BigNumber::division_base(copy, (base)10, &copy, &num);
         st.push((char)(num + '0'));
     }
