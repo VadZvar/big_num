@@ -2,6 +2,7 @@
 #define __BIGNUM__
 
 #include <iostream>
+#include <fstream>
 #include <cstdint>
 #include <stack>
 
@@ -18,8 +19,9 @@ class BigNumber {
 public:
     base *bn, *en, *ba, *ea; //bn, en - begin & end number, ba, ea - begin & end area
 public:
-    BigNumber(int, base);//выделяю память длины len и заполняю каждую ячейку большого числа значением fill
+    BigNumber(size_t, base);//выделяю память длины len и заполняю каждую ячейку большого числа значением fill
     BigNumber(base);
+    BigNumber(int);
     BigNumber(const BigNumber&);
     BigNumber(const string &str);
     BigNumber & operator=(const BigNumber&);
@@ -41,7 +43,7 @@ public:
     BigNumber operator >> (int num) const;
     BigNumber operator << (int num) const;
     friend istream& operator >> (istream&, BigNumber&);
-    friend ostream& operator << (ostream&, BigNumber&);
+    friend ostream& operator << (ostream&, const BigNumber&);
     ~BigNumber();
 //private:
     BigNumber();

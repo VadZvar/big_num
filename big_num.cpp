@@ -2,59 +2,93 @@
 #include <big_num.h>
 
 BigNumber::BigNumber() {
-    bn = en = ea = ba = nullptr;
+    bn = en = ea = ba = NULL;
 }
 
 BigNumber::~BigNumber() {
     if (ba) {
         delete [] ba;
     }
-    bn = en = ea = ba = nullptr;
+    bn = en = ea = ba = NULL;
 }
 
-BigNumber::BigNumber(int len, base fill) {
+BigNumber::BigNumber(size_t len, base fill) {
     ba = new base[len];
+    if (!ba) {
+        throw ALLOC_ERR;
+    }
     bn = ba;
     ea = ba + len - 1;
-    if (fill == 0) {
-        en = bn;
+
+    for (int i = 0; i < len; ++i) {
+        bn[i] = fill;
     }
-    else {
+    if (fill != 0) {
         en = ea;
     }
-    for (base *tmp = ba; tmp <= ea; ++tmp) {
-        *tmp = fill;
+    else {
+        en = bn;
     }
+    /*for (base *tmp = ba; tmp <= ea; ++tmp) {
+        *tmp = fill;
+    }*/
 }
 
 BigNumber::BigNumber(base b) {
     ba = new base[1];
+    if (!ba) {
+        throw ALLOC_ERR;
+    }
     bn = en = ea = ba;
-    *bn = b;
+    bn[0] = b;
+}
+
+BigNumber::BigNumber(int b) {
+    ba = new base[1];
+    if (!ba) {
+        throw ALLOC_ERR;
+    }
+    bn = en = ea = ba;
+    bn[0] = (base)b;
 }
 
 BigNumber::BigNumber(const BigNumber& b) {
-    if (b.ba == nullptr) {
-        bn = en = ea = ba = nullptr;
+    /*if (b.ba == NULL) {
+        bn = en = ea = ba = NULL;
         return;
     }
     size_t len = b.en - b.bn + 1;
     ba = new base[len];
+    if (!ba) {
+        throw ALLOC_ERR;
+    }
     bn = ba;
     ea = en = ba + len - 1;
     for (base *tmp1 = bn, *tmp2 = b.bn; tmp1 <= en; ++tmp1, ++tmp2) {
         *tmp1 = *tmp2;
+    }*/
+    int size = b.en - b.bn + 1;
+    ba = new base[size];
+    if (!ba) throw ALLOC_ERR;
+    ea = ba + size - 1;
+    en = ea;
+    bn = ba;
+    for (int i = 0; i < size; ++i) {
+        bn[i] = b.bn[i];
     }
 }
 
 BigNumber & BigNumber::operator=(const BigNumber& b) {
     if (this == &b) return *this;
-    if (b.ba == nullptr) {
-        bn = en = ea = ba = nullptr;
+    if (b.ba == NULL) {
+        bn = en = ea = ba = NULL;
         return *this;
     }
     size_t len = b.en - b.bn + 1;
     ba = new base[len];
+    if (!ba) {
+        throw ALLOC_ERR;
+    }
     bn = ba;
     ea = en = ba + len - 1;
     for (base *tmp1 = bn, *tmp2 = b.bn; tmp1 <= en; ++tmp1, ++tmp2) {
@@ -295,7 +329,7 @@ BigNumber BigNumber::Usual_mul (BigNumber &b) {
     
     for (i = 0; i < size_b; ++i){
         for (j = 0; j < size_a; ++j) {
-            buffer += (dbase)(b.bn[j]) * (dbase)(b.bn[i]) + (dbase)(res.bn[i + j]);
+            buffer += (dbase)(b.bn[i]) * (dbase)(bn[j]) + (dbase)(res.bn[i + j]);
             res.bn[i + j] = (base)buffer;
             buffer >>= BBITS;
         }
@@ -410,7 +444,7 @@ void BigNumber::division_base(const BigNumber& a, base b, BigNumber *q, base *r)
 
 BigNumber BigNumber::operator / (base b) const {
     BigNumber res(en - bn + 1, 0);
-    division_base(*this, b, &res, nullptr);
+    division_base(*this, b, &res, NULL);
     return res;
 }
 
@@ -469,7 +503,7 @@ std::istream & operator >> (std::istream& in, BigNumber& b) {
     in >> str;
     BigNumber::ReSize(b, str.size() / 4 + 1);
 
-    for (i = 0; i < str.size(); ++i) {
+    for (i = 0; i < str.size()/4 + 1; ++i) {
         b.bn[i] = 0;
     }
     b.en = b.bn;
@@ -487,6 +521,9 @@ std::istream & operator >> (std::istream& in, BigNumber& b) {
 BigNumber::BigNumber(const std::string & str) {
     int i;
     en = bn = ba = new base[str.size() / 4 + 1];
+    if (!ba) {
+        throw ALLOC_ERR;
+    }
     ea = ba + str.size() / 4;
     *bn = 0;
 
@@ -499,7 +536,7 @@ BigNumber::BigNumber(const std::string & str) {
     }
 }
 
-std::ostream & operator << (std::ostream& out, BigNumber b) {
+std::ostream & operator << (std::ostream& out, const BigNumber& b) {
     std::stack<char> st;
     BigNumber copy(b);
     base num;
@@ -514,7 +551,9 @@ std::ostream & operator << (std::ostream& out, BigNumber b) {
         st.push((char)(num + '0'));
     }
 
-    for (;!st.empty(); st.pop()) out << st.top();
+    for (;!st.empty(); st.pop()) {
+        out << st.top();
+    }
 
     return out;
 }
