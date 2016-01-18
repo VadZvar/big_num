@@ -12,6 +12,26 @@ BigNumber::~BigNumber() {
     bn = en = ea = ba = NULL;
 }
 
+BigNumber::BigNumber (base *b, size_t size, size_t r_size) {
+    ba = bn = b;
+    en = b + size - 1;
+    ea = b + r_size - 1;
+    for (; en > bn && !(*en); --en);
+}
+
+BigNumber * BigNumber::get_degree_two (size_t num_base, size_t num_bit) {
+    if (num_bit < 0 || num_bit > BBITS) throw "bad num_bits";
+    base *bb = new base[num_base];
+    base *now;
+    now = bb;
+
+    for (int i = 0; i < num_base - 1; ++i, ++now) {
+        *now = (base)0;
+    }
+    *now = 1 << num_bit;
+    return new BigNumber (bb, num_base, num_base);
+}
+
 BigNumber::BigNumber(size_t len, base fill) {
     ba = new base[len];
     if (!ba) {
@@ -391,6 +411,41 @@ BigNumber BigNumber::operator << (int num) const {
     return res;
 }
 
+BigNumber & BigNumber::operator >>= (int num) {
+    if (num < 0 || num > BBITS - 1) throw "so big";
+    
+    base buffer = 0, prev_buf = 0, mask = (1 << num) - 1;
+
+    for (int i = en - bn; i >= 0; --i) {
+        buffer = bn[i] & mask;
+        bn[i] = (bn[i] >> num) | (prev_buf << (BBITS - num));
+        prev_buf = buffer;
+    }
+
+    if (!*en && en != bn) --en;
+    
+    return *this;
+}
+
+BigNumber & BigNumber::operator <<= (int num) {
+    if (num < 0 || num > BBITS - 1) throw "so big";
+
+    base buffer = 0, prev_buf = 0, mask = (1 << num) - 1;
+    for (int i = 0; i < en - bn + 1; ++i) {
+        buffer = (bn[i] >> (BBITS - num)) & mask;
+        bn[i] = (bn[i] << num) | prev_buf;
+        prev_buf = buffer;
+    }
+    if (prev_buf) {
+        BigNumber::ReSize(*this, en - bn + 2);
+        ++en;
+        *en = prev_buf;
+    }
+    
+    return *this;
+}
+
+
 void BigNumber::division_base(const BigNumber& a, base b, BigNumber *q, base *r) {
     if (b == 0) throw "division by zero";
 
@@ -556,4 +611,206 @@ std::ostream & operator << (std::ostream& out, const BigNumber& b) {
     }
 
     return out;
+}
+
+void BigNumber::div_mod (BigNumber& a, BigNumber& b, BigNumber *q, BigNumber *r) {
+    if (b == 0) throw "division on zero";
+    
+    int i, count = 0, c1 = BBITS - 1;
+    dbase c2 = (dbase)1 << BBITS;
+    size_t size_a = a.en - a.bn + 1, size_b = b.en - b.bn + 1;
+    
+    if (size_b == 1) {
+        division_base(a, *(b.bn), q, (r)?r -> bn:nullptr);
+        if (r) r -> en = r -> bn;
+        return;
+    }
+    else {
+        if (a < b) {
+            if (r) {
+                for (i = 0; i < size_a; ++i) {
+                    r -> bn[i] = a.bn[i];
+                }
+                r -> en = r -> bn + size_a - 1;
+            }
+            if (q) {
+                *(q -> bn) = 0;
+                q -> en = q -> bn;
+            }
+            return;
+        }
+    base *q1;
+    base *ub = new base[size_a + 5];
+    if (!ub) throw ALLOC_ERR;
+    ub[size_a + 1] = ub[size_a] = 0;
+    for (i = 0; i < size_a; ++i) {
+        ub[i] = a.bn[i];
+    }
+    BigNumber u(ub, size_a, size_a + 2);
+    base mask = (base)(1 << c1);
+    for (i = c1; i >= 0; mask >>= 1, --i) {
+        if (*(b.en) & mask) {
+            count = c1 - i;
+            i = -1;
+        }
+    }
+
+    b <<= count;
+    u <<= count;
+
+    dbase qhat, rhat;
+    size_a = u.en - u.bn + 1;
+    size_b = b.en - b.bn + 1;
+
+    if (q) q1 = q -> en = q -> bn + size_a - size_b;
+    if (size_a > size_b) u.bn = u.en - size_b + 1;
+
+    for (int j = size_a; j >= size_b; --j) {
+        qhat = ((((dbase)u.bn[size_b]) << BBITS) + u.bn[size_b - 1]);
+        rhat = qhat % (*b.en);
+        qhat /= (*b.en);
+        for (; rhat < c2 && qhat *(*(b.en - 1)) > (rhat << BBITS) + u.bn[size_b + 2];) {
+            --qhat;
+            rhat += *(b.en);
+        }
+        if (b * (base)qhat > u) {
+            --qhat;
+            u += b;
+        }
+        u.en = u.bn + size_b;
+        u -= b * qhat;
+        --u.bn;
+        if (q) {
+            *q1 = qhat;
+            --q1;
+        }
+    }
+
+    b >>= count;
+
+    if (r) {
+        ++u.bn;
+        u >>= count;
+        for (i = 0; i < u.en - u.bn + 1; ++i) {
+            r -> bn[i] = u.bn[i];
+        }
+        r -> en = r -> bn + (u.en - u.bn);
+        if (!(b > *r)) *r -= b;
+    }
+    if (q) {
+        ++q1;
+        q -> bn = q1;
+        for (; !*(q -> en); --q -> en);
+    }
+  }
+}
+
+BigNumber BigNumber::operator / (BigNumber& b) {
+    if (en - bn >= b.en - b.bn) {
+        BigNumber res((en - bn) - (b.en - b.bn) + 2, 0);
+        div_mod(*this, b, &res, nullptr);
+        return res;
+    }
+    else {
+        return BigNumber(0);
+    }
+}
+
+BigNumber BigNumber::operator % (BigNumber& b) {
+    if (en - bn >= b.en - b.bn) {
+        BigNumber res(b.en - b.bn + 1, 0);
+        div_mod(*this, b, nullptr, &res);
+        return res;
+    }
+    else {
+        return BigNumber(*this);
+    }
+}
+
+BigNumber BigNumber::sqr() {
+    return *this * *this;
+}
+
+BigNumber BigNumber::pow(BigNumber & degree, BigNumber & mod) {
+    BigNumber res(1), z(*this), num;
+    base *end, *now, tmp;
+    size_t size_mod = mod.en - mod.bn + 1;
+    int i;
+    BigNumber *d2 = BigNumber::get_degree_two((size_mod << 1) + 1, 0);
+    num = (*d2) / mod;
+    delete d2;
+    z = z % mod;
+
+    for (now = degree.bn; now <= degree.en; ++now) {
+        tmp = *now;
+        if (tmp) {
+            for (i = 0; i < BBITS; ++i, tmp >>= 1) {
+                if (tmp & 1) {
+                    res = res * z;
+                    res.barret(mod, num);
+                    //res = res % mod;
+                }
+                z = z.sqr();
+                res.barret(mod, num);
+                //z = z % mod;
+            }
+        }
+        else {
+            for (i = 0; i < BBITS; ++i) {
+                z = z.sqr();
+                res.barret(mod, num);
+                //z = z % mod;
+            }
+        }
+    }
+    return res;
+}
+
+BigNumber & BigNumber::barret (BigNumber & mod, BigNumber & num) {
+    if (mod == 0) throw "bad mod";
+
+    size_t size_mod = mod.en - mod.bn + 1;
+    base *end = en, *now, *now_r;
+    base *tmp = new base[size_mod + 2];
+
+    if (*this < mod) return *this;
+    BigNumber rem (*this);
+    BigNumber r1 (tmp, size_mod + 1, size_mod + 2);
+    en = end;
+    bn += size_mod + 1;
+    *this = *this * num;
+    BigNumber nn(rem);
+    rem = rem / mod;
+    *this = *this * mod;
+    if (en - bn > size_mod) en = bn + size_mod;
+
+    for (now = bn + size_mod + 1; now <= ea; *now = 0, ++now);
+    for (; *en == 0 && bn < en; --en);
+    
+    if (!(*this > r1)) {
+        r1 -= *this;
+    }
+    else {
+        size_t size_this = en - bn + 1;
+        base mask = ((base)1) << (BBITS - 1);
+        base shift = BBITS - 1;
+        
+        for (; !(mask & *en); mask >>= 1, --shift);
+        BigNumber::ReSize (r1, size_mod + 2);
+        size_this = (size_this > size_mod)?(size_mod):(size_this);
+        r1.en = r1.bn + size_this;
+        *(r1.en) += 1 << shift;
+        r1 -= *this;
+    }
+
+    for (; !(r1 < mod); ){
+        r1 -= mod;        
+    }
+    delete[] ba;
+    ba = r1.ba;
+    bn = r1.bn;
+    ea = r1.ea;
+    en = r1.en;
+    r1.ba = nullptr;
+    return *this;
 }
