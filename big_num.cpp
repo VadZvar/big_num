@@ -785,7 +785,7 @@ BigNumber & BigNumber::barret (BigNumber & mod, BigNumber & num){
     for (; *en == 0 && bn < en; --en);
 
 	if (!(*this > r1)) {
-		r1 -= *this;
+		*this = r1 - *this;
 	} 
     else {
 		BigNumber::ReSize(r1, size_mod + 1);
@@ -794,7 +794,15 @@ BigNumber & BigNumber::barret (BigNumber & mod, BigNumber & num){
 		*this = r1 - *this;
 	}
 	for (;!(*this < mod);) {
-		*this -= mod;
+		*this = *this - mod;
 	}
 	return *this;
+}
+
+BigNumber BigNumber::fmul (BigNumber&) {
+    size_t size_a = 
+}
+
+BigNumber BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
+    
 }
