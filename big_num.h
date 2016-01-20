@@ -27,7 +27,7 @@ public:
     BigNumber (base *, size_t, size_t);
     BigNumber & operator=(const BigNumber&);
     static BigNumber * get_degree_two(size_t, size_t);
-    static void division_base (const BigNumber& a, base b, BigNumber * q, base * r);
+    static void div_mod (const BigNumber& a, base b, BigNumber * q, base * r);
     static void div_mod (BigNumber&, BigNumber&, BigNumber *, BigNumber *);
     bool operator < (const BigNumber&);
     bool operator > (const BigNumber&);

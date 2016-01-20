@@ -766,35 +766,59 @@ BigNumber BigNumber::pow(BigNumber & degree, BigNumber & mod) {
     return res;
 }
 
-BigNumber & BigNumber::barret (BigNumber & mod, BigNumber & num){
-	size_t size_mod = mod.en - mod.bn + 1;
-	if (mod == 0) throw "bad mod";
-	if (*this < mod) {
-		return *this;
-	}
-    base *end = en;
-    en = bn + size_mod;
-    for (;*en == 0 && bn < en; --en);
-	BigNumber r1(*this);
-    en = end;
-	bn += size_mod - 1;
-	*this = *this * num;
-	bn += size_mod + 1;
-	*this = *this * mod;
-	en = bn + size_mod;
-    for (; *en == 0 && bn < en; --en);
+BigNumber & BigNumber::barret (BigNumber & mod, BigNumber & num) {
+    if (mod == 0) throw "bad mod";
 
-	if (!(*this > r1)) {
-		r1 -= *this;
-	} 
+    size_t size_mod = mod.en - mod.bn + 1;
+    base *end = en, *now, *now_r;
+    base *tmp = new base[size_mod + 2];
+    for (now = tmp; now < tmp + size_mod + 1; *now = 0, ++now);
+    for (now = tmp, now_r = bn; now < tmp + size_mod + 1 && now_r < en; ++now, ++now_r) {
+        *now = *now_r;
+    }
+    if (*this < mod) return *this;
+    for (now = bn + size_mod + 1; now <= ea; *now = 0, ++now);
+    for (; *en == 0 && bn < en; --en);
+    BigNumber rem (*this);
+    BigNumber r1 (tmp, size_mod + 1, size_mod + 2);
+    en = end;
+    bn += size_mod - 1;
+    *this = *this * num;
+    bn += size_mod + 1;
+    BigNumber nn(rem);
+    rem = rem / mod;
+    *this = *this * mod;
+    if (en - bn > size_mod) en = bn + size_mod;
+
+    //for (now = bn + size_mod + 1; now <= ea; *now = 0, ++now);
+    //for (; *en == 0 && bn < en; --en);
+    
+    if (!(*this > r1)) {
+        r1 -= *this;
+    }
     else {
-		BigNumber::ReSize(r1, size_mod + 1);
-		r1.en = r1.bn + size_mod;
-		*(r1.en) = 1;
-		*this = r1 - *this;
-	}
-	for (;!(*this < mod);) {
-		*this -= mod;
-	}
-	return *this;
+        size_t size_this = en - bn + 1;
+        base mask = ((base)1) << (BBITS - 1);
+        base shift = BBITS - 1;
+        
+        for (; !(mask & *en); mask >>= 1, --shift);
+        BigNumber::ReSize (r1, size_mod + 2);
+        size_this = (size_this > size_mod)?(size_mod):(size_this);
+        r1.en = r1.bn + size_this;
+        *(r1.en) += 1 << shift;
+        r1 -= *this;
+    }
+
+    for (; !(r1 < mod); ){
+        r1 -= mod;        
+    }
+    delete[] ba;
+    ba = r1.ba;
+    bn = r1.bn;
+    ea = r1.ea;
+    en = r1.en;
+    r1.ba = nullptr;
+    return *this;
 }
+
+
