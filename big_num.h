@@ -10,6 +10,8 @@
 #define BBITS 32
 #define BASE_MASK(N) ((base)1) << (((N % (BBITS)) << 1) - 1)
 #define DBASE_MASK(N) ((dbase)1) << (((N % 64) << 1) - 1)
+#define CAR_BORDER 50
+
 using namespace std;
 typedef uint32_t base;
 typedef uint64_t dbase;
@@ -38,6 +40,7 @@ public:
     BigNumber & operator += (const BigNumber&);
     BigNumber & operator -= (const BigNumber&);
     BigNumber & operator *= (base);
+    BigNumber & operator *= (BigNumber&);
     BigNumber operator + (const BigNumber&) const;
     BigNumber operator - (const BigNumber&) const;
     BigNumber operator * (BigNumber&);
@@ -57,9 +60,12 @@ public:
     BigNumber sqr();
     BigNumber pow (BigNumber & degree, BigNumber & mod);
     BigNumber & barret (BigNumber&, BigNumber&);
+    BigNumber fmul (BigNumber&);
+    void fmul_car (BigNumber&, BigNumber&);
     int Compare(const BigNumber&);
     static void ReSize(BigNumber&, size_t);
     BigNumber Usual_mul(BigNumber&);
+    void usual_mul_mem (BigNumber&, BigNumber&);
     void minus (const BigNumber&, BigNumber&);
     void plus (const BigNumber&, BigNumber&) const;
 };
