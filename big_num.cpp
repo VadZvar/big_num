@@ -1006,3 +1006,190 @@ void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 	}
 	return;
 }
+
+bool BigNumber::miller_rabin_test() {
+    if (!(*this > 3)) {
+        if (*bn == 1) {
+            return false;
+        }
+        else return true;
+    }
+    if (!(*bn & 1)) {
+        return false;
+    }
+
+    BigNumber r = *this - 1, b;
+    BigNumber decn = r;
+    size_t size_p = en - bn + 1, sbits, sbase, s;
+    base mask, *now;
+
+    for (now = r.bn; now <= r.en; ++now) {
+        mask = 1;
+        for (int j = 0; j < BBITS; mask <<= 1, ++j) {
+            if (mask & *now) {
+                sbits = j;
+                sbase = now - r.bn;
+                j = BBITS;
+                now = r.en + 1;
+            }
+        }
+    }
+
+    r.bn += sbase;
+    if (sbits) r >>= sbits;
+    s = BBITS * sbase + sbits;
+
+    int i;
+    for (i = MR_REL_PARAM; i > 0; --i) {
+        b = BigNumber::gen_num_less_than(decn);
+        while (b < 2) {
+            b = BigNumber::gen_num_less_than(decn);
+        }
+        b = b.pow(r, *this);
+
+        if (b != 1 && b != decn) {
+            for (int j = 0; j < s -1 && b != decn; ++j) {
+                b = b.sqr() % *this;
+                if (b == 1) return false;
+            }
+            if (b != decn) return false;
+        }
+    }
+    return true;
+}
+
+bool BigNumber::is_prime() {
+    return this -> miller_rabin_test();
+}
+
+size_t BigNumber::bitsize () {
+    size_t bits = (en - bn) * BBITS;
+    base mask = ((base)1) << (BBITS - 1);
+    for (; !((*en) & mask); mask >>= 1){
+        ++bits;
+    }
+    return bits;
+}
+BigNumber BigNumber::gen_prime (size_t bits) {
+    BigNumber b = BigNumber::gen_num_with_bits(bits);
+    if (!(*(b.bn) & 1)) {
+        b += 1;
+    }
+    while (true) {
+        for (; b.bitsize() == bits && !(b.is_prime()); b += 2);
+        if (b.bitsize() == bits) {
+            break;
+        }
+        else b = BigNumber::gen_num_with_bits(bits);
+    }
+    return b;
+}
+
+BigNumber BigNumber::random (int length) {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    srand(ts.tv_nsec);
+    base *ba, *ea, *en;
+    int num_length = length;
+    ba = new base[length];
+    if (!ba) throw ALLOC_ERR;
+
+    ea = ba + length - 1;
+    base *t = ea;
+    en = t;
+    while (t > ba && !(*t = (base)rand())) {
+        --t;
+        --num_length;
+    }
+    for (; t >= ba; --t) {
+        *t = (base)rand();
+    }
+
+    return BigNumber (ba, num_length, length);
+}
+
+BigNumber BigNumber::gen_num_with_bits (size_t num) {
+    size_t num_base = (num / BBITS) + 1, num_bits = num;
+    return BigNumber::gen_num_with_bits (num_base, num_bits);
+}
+
+BigNumber BigNumber::gen_num_with_bits (size_t num_base, size_t num_bits) {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    srand(ts.tv_nsec);
+    base *ba, *en, *bn, *t;
+    bn = ba = new base[num_base];
+    en = ba + num_base - 1;
+
+    if (num_bits >= BBITS) {
+        num_bits %= BBITS;
+    }
+    if (num_bits == 0) {
+        if (num_base > 1) {
+            --num_base;
+            num_bits = BBITS - 1;
+        }
+        else throw "strange params";
+    }
+
+    base mask = (1 << num_bits) - 1;
+    *en = rand() & mask;
+    mask = 1 << (num_bits - 1);
+    *en |= mask;
+    for (t = en - 1; t >= bn; --t) {
+        *t = rand();
+    }
+
+    return BigNumber (ba, num_base, num_base);
+}
+
+BigNumber BigNumber::gen_num_less_than (BigNumber& b) {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts); 
+    srand(ts.tv_nsec);
+    base *ba, *en, *bn, *t, *bt;
+    size_t size_b = b.en - b.bn + 1;
+    ba = bn = new base[size_b];
+    en = bn + size_b - 1;
+
+    if (b == 0) {
+        return BigNumber(0);
+    }
+    for (t = bn; t <= en; ++t) {
+        *t = rand();
+    }
+    if (*en > *(b.en)) {
+        *en = *en % *(b.en);
+    }
+    if (en != 0 || en == bn) {
+        if (*en == *(b.en)) {
+            for (t = en - 1, bt = b.en - 1; t > ba; --t) {
+                if (*t > *bt) {
+                    *t = *t % *bt;
+                    return BigNumber (ba, size_b, size_b);
+                }
+                else if (*t < *bt) {
+                    return BigNumber (ba, size_b, size_b);
+                }
+            }
+            if (en != bn) {
+                return BigNumber (ba, size_b, size_b) - 1;
+            }
+            else {
+                if (*bn) {
+                    --(*bn);
+                }
+                else {
+                    return BigNumber (ba, size_b, size_b) - 1;
+                }
+            }
+            return BigNumber (ba, size_b, size_b);
+        }
+        else {
+            return BigNumber (ba, size_b, size_b);
+        }
+    }
+
+    for (t = en - 1; t > ba && !(*t); --t);
+    return BigNumber (ba, t - ba + 1, size_b);
+}

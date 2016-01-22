@@ -11,6 +11,7 @@
 #define BASE_MASK(N) ((base)1) << (((N % (BBITS)) << 1) - 1)
 #define DBASE_MASK(N) ((dbase)1) << (((N % 64) << 1) - 1)
 #define CAR_BORDER 50
+#define MR_REL_PARAM 10
 
 using namespace std;
 typedef uint32_t base;
@@ -62,12 +63,20 @@ public:
     BigNumber & barret (BigNumber&, BigNumber&);
     BigNumber fmul (BigNumber&);
     void fmul_car (BigNumber&, BigNumber&);
+    bool miller_rabin_test();
+    bool is_prime();
+    static BigNumber gen_prime (size_t bits);
+    static BigNumber random (int length);
+    static BigNumber gen_num_with_bits (size_t num);
+    static BigNumber gen_num_with_bits (size_t num_base, size_t size_bits);
+    static BigNumber gen_num_less_than (BigNumber & b);
     int Compare(const BigNumber&);
     static void ReSize(BigNumber&, size_t);
     BigNumber Usual_mul(BigNumber&);
     void usual_mul_mem (BigNumber&, BigNumber&);
     void minus (const BigNumber&, BigNumber&);
     void plus (const BigNumber&, BigNumber&) const;
+    size_t bitsize();
 };
 
 #endif
