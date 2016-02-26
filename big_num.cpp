@@ -335,7 +335,7 @@ void BigNumber::ReSize(BigNumber& b, size_t new_size) {
 }
 
 BigNumber BigNumber::operator * (BigNumber& b) {
-    return this -> fmul(b);
+    return this -> Usual_mul(b);
 }
 
 BigNumber BigNumber::Usual_mul (BigNumber &b) {
