@@ -846,30 +846,29 @@ BigNumber BigNumber::fmul (BigNumber& b) {
 
 void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 	size_t size_a = en - bn + 1, size_b = b.en - b.bn + 1;
-	if(CAR_BORDER < 3){
+	if(CAR_BORDER < 3) {
 		throw "bag CAR_BORDER";
 	}
 	
-	if(size_a > CAR_BORDER && size_b > CAR_BORDER){
-		size_t mask = (size_a > size_b)?(size_a>>1):(size_b>>1);
-		if(mask < size_a && mask < size_b){
+	if(size_a > CAR_BORDER && size_b > CAR_BORDER) {
+		size_t mask = (size_a > size_b) ? (size_a >> 1) : (size_b >> 1);
+		if (mask < size_a && mask < size_b) {
 			BigNumber a1(bn + mask, size_a - mask, size_a - mask),\
-					a2(bn, mask, mask),\
-					b1(b.bn + mask, size_b - mask, size_b - mask),\
-					b2(b.bn, mask, mask);
+					  a2(bn, mask, mask),\
+					  b1(b.bn + mask, size_b - mask, size_b - mask),\
+					  b2(b.bn, mask, mask);
 			
-			size_t size_a1 = a1.en - a1.bn + 1, \
+			size_t  size_a1 = a1.en - a1.bn + 1, \
 					size_a2 = a2.en - a2.bn + 1, \
 					size_b1 = b1.en - b1.bn + 1, \
 					size_b2 = b2.en - b2.bn + 1;
-			size_t mm1 = (size_a1 > size_b1)?(size_a1 + 1):(size_b1 + 1),\
-					mm2 = (size_a2 > size_b2)?(size_a2 + 1):(size_b2 + 1);
-			size_t num = (mask << 1) + 4 + size_a1 + size_a2 + size_b1 + size_b2 + \
-							 + mm1 + mm2;
+			size_t mm1 = (size_a1 > size_b1) ? (size_a1 + 1) : (size_b1 + 1),\
+				   mm2 = (size_a2 > size_b2) ? (size_a2 + 1) : (size_b2 + 1);
+			size_t num = (mask << 1) + 4 + size_a1 + size_a2 + size_b1 + size_b2 + mm1 + mm2;
 							
 			base * tmp = new base[num];
 			base * now;	
-			for(now = tmp; now < tmp + num; ++now){
+			for (now = tmp; now < tmp + num; ++now) {
 				*now = 0;
 			}
 			now = tmp;
@@ -887,16 +886,16 @@ void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 			a1.plus(a2, r1);
 			b1.plus(b2, r2);
 			
-			a2.fmul_car(b2, r4);
-			a1.fmul_car(b1, r3);
-			r1.fmul_car(r2, r5);
+			a2.fmul_car(b2, r4);//A
+			a1.fmul_car(b1, r3);//B
+			r1.fmul_car(r2, r5);//C
 			
 			r5 -= r3;
 			r5 -= r4;
 			
 			base * now_res, * now_r;
 
-			for(now_res = res.bn, now_r = r4.bn;now_r <= r4.en; ++now_r, ++now_res){
+			for (now_res = res.bn, now_r = r4.bn; now_r <= r4.en; ++now_r, ++now_res) {
 				*now_res = *now_r;
 			}
 
@@ -904,13 +903,13 @@ void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 			
 			dbase buffer = 0;
 			
-			for(now_r = r5.bn; now_r <= r5.en; ++now_r, ++now_res){
+			for (now_r = r5.bn; now_r <= r5.en; ++now_r, ++now_res) {
 				buffer += (dbase)(*now_res) + (dbase)(*now_r);
 				*now_res = (base) buffer;
 				buffer >>= BBITS;
 			}
 
-			for(;buffer; ++now_res){
+			for (; buffer; ++now_res) {
 				buffer += (dbase) *now_res;
 				*now_res = (base) buffer;
 				buffer >>= BBITS;
@@ -918,19 +917,19 @@ void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 
 			now_res = res.bn + (mask << 1);
 
-			for(now_r = r3.bn; now_r <= r3.en; ++now_r, ++now_res){
+			for (now_r = r3.bn; now_r <= r3.en; ++now_r, ++now_res) {
 				buffer += (dbase)(*now_res) + (dbase)(*now_r);
 				*now_res = (base) buffer;
 				buffer >>= BBITS;
 			}
 
-			for(;buffer; ++now_res){
+			for (; buffer; ++now_res) {
 				buffer += (dbase)*now_res;
 				*now_res = (base) buffer;
 				buffer >>= BBITS;
 			}
 
-			for(now_res = res.bn + size_a + size_b - 1; !(*now_res); --now_res);
+			for (now_res = res.bn + size_a + size_b - 1; !(*now_res); --now_res);
 			res.en = now_res;
 
 			a1.ba = a2.ba = b1.ba = b2.ba = r1.ba = r2.ba = r3.ba = r4.ba = r5.ba = nullptr;
@@ -938,12 +937,12 @@ void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 		} else {
 			BigNumber max1, max2, min;
 			size_t size_min, size_max1, size_max2, num; 
-			if(size_a > size_b){
+			if (size_a > size_b) {
 				max1.ba = max1.bn = bn + mask;
 				max1.ea = max1.en = en;
 				max2.ba = max2.bn = bn;
 				max2.ea = max2.en = bn + mask - 1;
-				for(;max2.bn < max2.en && !(*max2.en);--(max2.en));
+				for (; max2.bn < max2.en && !(*max2.en); --(max2.en));
 				min.ba = min.bn = b.bn;
 				min.en = min.ea = b.en;
 			} else {
@@ -961,7 +960,7 @@ void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 
 			base * tmp = new base[num], * now;
 
-			for(now = tmp; now < tmp + num; ++now){
+			for (now = tmp; now < tmp + num; ++now) {
 				*now = 0;
 			}
 			
@@ -977,25 +976,25 @@ void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 			
 			dbase buffer = 0;
 
-			for(now_r = r2.bn; now_r <= r2.en; ++now_r, ++now_res){
+			for (now_r = r2.bn; now_r <= r2.en; ++now_r, ++now_res) {
 				*now_res = *now_r;
 			}
 
 			now_res = res.bn + mask;
 
-			for(now_r = r1.bn; now_r <= r1.en; ++now_r, ++now_res){
+			for (now_r = r1.bn; now_r <= r1.en; ++now_r, ++now_res) 
 				buffer += (dbase)(*now_res) + (dbase)(*now_r);
 				*now_res = (base) buffer;
 				buffer >>= BBITS;
 			}
 
-			for(;buffer; ++now_res){
+			for (; buffer; ++now_res) {
 				buffer += (dbase)(*now_res);
 				*now_res = (base) buffer;
 				buffer >>= BBITS;
 			}
 
-			for(now_res = res.bn + size_a + size_b - 1; !(*now_res); --now_res);
+			for (now_res = res.bn + size_a + size_b - 1; !(*now_res); --now_res);
 			res.en = now_res;
 
 			max1.ba = max2.ba = min.ba = r1.ba = r2.ba = nullptr;

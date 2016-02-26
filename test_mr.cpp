@@ -5,10 +5,8 @@
 
 int main () {
     BigNumber a(0);
-    for (int t = N; t; --t) {
-        a = BigNumber::gen_prime(M);
-        std::cout << a << std::endl;
-        std::cout << (std::string)((a.is_prime()) ? ("True") : ("False")) << std::endl;
-    }
+    std::cin >> a; 
+    std::cout << "a = " << a << std::endl;
+    std::cout << (std::string)((a.is_prime()) ? ("True") : ("False")) << std::endl;
     return 0;
 }
