@@ -784,19 +784,19 @@ BigNumber BigNumber::pow(BigNumber & degree, BigNumber & mod) {
             for (i = 0; i < BBITS; ++i, tmp >>= 1) {
                 if (tmp & 1) {
                     res = res * z;
-                    res = res.barret(mod, num);
-                    //res = res % mod;
+                    //res = res.barret(mod, num);
+                    res = res % mod;
                 }
                 z = z.sqr();
-                z.barret(mod, num);
-                //z = z % mod;
+                //z.barret(mod, num);
+                z = z % mod;
             }
         }
         else {
             for (i = 0; i < BBITS; ++i) {
                 z = z.sqr();
-                z.barret(mod, num);
-                //z = z % mod;
+                //z.barret(mod, num);
+                z = z % mod;
             }
         }
     }
@@ -1062,10 +1062,10 @@ bool BigNumber::is_prime() {
 }
 
 size_t BigNumber::bitsize () {
-    size_t bits = (en - bn) * BBITS;
+    size_t bits = (en - bn + 1) * BBITS;
     base mask = ((base)1) << (BBITS - 1);
     for (; !((*en) & mask); mask >>= 1){
-        ++bits;
+        --bits;
     }
     return bits;
 }
@@ -1081,6 +1081,7 @@ BigNumber BigNumber::gen_prime (size_t bits) {
         }
         else b = BigNumber::gen_num_with_bits(bits);
     }
+    //for (; !(b.is_prime()); b += 2);
     return b;
 }
 
