@@ -811,7 +811,7 @@ BigNumber & BigNumber::barret (BigNumber & mod, BigNumber & num){
 	}
     base *end = en;
     en = bn + size_mod;
-    for (;*en == 0 && bn < en; --en);
+    for (;*en == 0 && bn < en; --en); //идём до первой ненулевой базы
 	BigNumber r1(*this);
     en = end;
 	bn += size_mod - 1;
@@ -827,8 +827,8 @@ BigNumber & BigNumber::barret (BigNumber & mod, BigNumber & num){
     else {
 		BigNumber::ReSize(r1, size_mod + 1);
 		r1.en = r1.bn + size_mod;
-		*(r1.en) = 1;
-		*this = r1 - *this;
+		*(r1.en) = 1; //b^k+1 + r1
+		*this = r1 - *this; //-r2
 	}
 	for (;!(*this < mod);) {
 		*this = *this - mod;
@@ -851,7 +851,7 @@ void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 	}
 	
 	if(size_a > CAR_BORDER && size_b > CAR_BORDER) {
-		size_t mask = (size_a > size_b) ? (size_a >> 1) : (size_b >> 1);
+		size_t mask = (size_a > size_b) ? (size_a >> 1) : (size_b >> 1);//половина макс.размера числа
 		if (mask < size_a && mask < size_b) {
 			BigNumber a1(bn + mask, size_a - mask, size_a - mask),\
 					  a2(bn, mask, mask),\
@@ -982,7 +982,7 @@ void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 
 			now_res = res.bn + mask;
 
-			for (now_r = r1.bn; now_r <= r1.en; ++now_r, ++now_res) 
+			for (now_r = r1.bn; now_r <= r1.en; ++now_r, ++now_res) { 
 				buffer += (dbase)(*now_res) + (dbase)(*now_r);
 				*now_res = (base) buffer;
 				buffer >>= BBITS;
