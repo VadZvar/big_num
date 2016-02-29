@@ -44,7 +44,7 @@ public:
     BigNumber & operator *= (BigNumber&);
     BigNumber operator + (const BigNumber&) const;
     BigNumber operator - (const BigNumber&) const;
-    BigNumber operator * (BigNumber&);
+    BigNumber operator * (const BigNumber&);
     BigNumber operator * (base);
     BigNumber operator / (base) const;
     BigNumber operator / (BigNumber&);
@@ -60,9 +60,9 @@ public:
     BigNumber();
     BigNumber sqr();
     BigNumber pow (BigNumber & degree, BigNumber & mod);
-    BigNumber & barret (BigNumber&, BigNumber&);
-    BigNumber fmul (BigNumber&);
-    void fmul_car (BigNumber&, BigNumber&);
+    BigNumber & barret (const BigNumber&, BigNumber&);
+    BigNumber fmul (const BigNumber&);
+    void fmul_car (const BigNumber&, BigNumber&);
     bool miller_rabin_test();
     bool is_prime();
     static BigNumber gen_prime (size_t bits);
@@ -73,7 +73,7 @@ public:
     int Compare(const BigNumber&);
     static void ReSize(BigNumber&, size_t);
     BigNumber Usual_mul(BigNumber&);
-    void usual_mul_mem (BigNumber&, BigNumber&);
+    void usual_mul_mem (const BigNumber&, BigNumber&);
     void minus (const BigNumber&, BigNumber&);
     void plus (const BigNumber&, BigNumber&) const;
     size_t bitsize();

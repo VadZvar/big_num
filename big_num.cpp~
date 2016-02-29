@@ -379,9 +379,8 @@ void BigNumber::ReSize(BigNumber & b, size_t new_size) {
     }
 }
 
-BigNumber BigNumber::operator * (const BigNumber& b) {
-    //return this -> Usual_mul(b);
-    return this -> fmul(b);
+BigNumber BigNumber::operator * (BigNumber& b) {
+    return this -> Usual_mul(b);
 }
 
 BigNumber BigNumber::Usual_mul (BigNumber &b) {
@@ -415,7 +414,7 @@ BigNumber BigNumber::Usual_mul (BigNumber &b) {
     return res;
 }
 
-void BigNumber::usual_mul_mem (const BigNumber &b, BigNumber &res) {
+void BigNumber::usual_mul_mem (BigNumber &b, BigNumber &res) {
     dbase buffer = 0;
     int i, j;
     size_t size_a = en - bn + 1;
@@ -849,8 +848,8 @@ BigNumber BigNumber::pow(BigNumber & degree, BigNumber & mod) {
     return res;
 }
 
-BigNumber & BigNumber::barret (const BigNumber & mod, BigNumber & num){
-	size_t size_mod = mod.en - mod.bn + 1;
+BigNumber & BigNumber::barret (BigNumber & mod, BigNumber & num){
+	/*size_t size_mod = mod.en - mod.bn + 1;
 	if (mod == 0) throw "bad mod";
 	if (*this < mod) {
 		return *this;
@@ -879,10 +878,40 @@ BigNumber & BigNumber::barret (const BigNumber & mod, BigNumber & num){
 	for (;!(*this < mod);) {
 		*this = *this - mod;
 	}
+	return *this;*/
+	size_t k = mod.en - mod.bn + 1;
+	if(mod == 0){
+		throw "bad mod";
+	}
+	if(*this < mod){
+		return *this;
+	}
+	base * end = en;
+	en = bn + k;
+	for(;*en == 0 && bn < en; --en);
+	BigNumber r1(*this);
+	en = end;
+	bn += k - 1;
+	*this = *this * num;
+	bn += k + 1;
+	*this = *this * mod;
+	en = bn + k;
+	for(;*en == 0 && bn < en; --en);
+	if(!(*this > r1)){
+		*this = r1 - *this;
+	} else {
+		BigNumber::ReSize(r1, k + 1);
+		r1.en = r1.bn + k;
+		*(r1.en) = 1;
+		*this = r1 - *this;
+	}
+	for(;!(*this < mod);){
+		*this = *this - mod;
+	}
 	return *this;
 }
 
-BigNumber BigNumber::fmul (const BigNumber& b) {
+BigNumber BigNumber::fmul (BigNumber& b) {
     size_t size_a = en - bn + 1, size_b = b.en - b.bn + 1;
     BigNumber res(size_a + size_b + 1, 0);
 
@@ -890,7 +919,7 @@ BigNumber BigNumber::fmul (const BigNumber& b) {
     return res; 
 }
 
-void BigNumber::fmul_car (const BigNumber& b, BigNumber& res) {
+void BigNumber::fmul_car (BigNumber& b, BigNumber& res) {
 	size_t size_a = en - bn + 1, size_b = b.en - b.bn + 1;
 	if(CAR_BORDER < 3) {
 		throw "bag CAR_BORDER";
