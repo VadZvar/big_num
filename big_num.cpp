@@ -117,7 +117,7 @@ BigNumber & BigNumber::operator=(const BigNumber& b) {
 
 }
 
-int BigNumber::Compare(const BigNumber& b) {
+int BigNumber::Compare(const BigNumber& b) const{
     if ((en - bn) == (b.en - b.bn)) {
         for (base *tmp1 = en, *tmp2 = b.en; tmp1 >= bn; --tmp1, --tmp2) {
             if (*tmp1 > *tmp2) return 1;
@@ -131,27 +131,27 @@ int BigNumber::Compare(const BigNumber& b) {
     }
 }
 
-bool BigNumber::operator < (const BigNumber& b) {
+bool BigNumber::operator < (const BigNumber& b) const {
     return (Compare(b) == -1);
 }
 
-bool BigNumber::operator > (const BigNumber& b) {
+bool BigNumber::operator > (const BigNumber& b) const {
     return (Compare(b) == 1);
 }
 
-bool BigNumber::operator >= (const BigNumber& b) {
+bool BigNumber::operator >= (const BigNumber& b) const {
     return (Compare(b) == 1 || Compare(b) == 0);
 }
 
-bool BigNumber::operator <= (const BigNumber& b) {
+bool BigNumber::operator <= (const BigNumber& b) const {
     return (Compare(b) == -1 || Compare(b) == 0);
 }
 
-bool BigNumber::operator == (const BigNumber& b) {
+bool BigNumber::operator == (const BigNumber& b) const {
     return (Compare(b) == 0);
 }
 
-bool BigNumber::operator != (const BigNumber& b) {
+bool BigNumber::operator != (const BigNumber& b) const {
     return (Compare(b) != 0);
 }
 

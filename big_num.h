@@ -32,12 +32,12 @@ public:
     static BigNumber * get_degree_two(size_t, size_t);
     static void div_mod (const BigNumber& a, base b, BigNumber * q, base * r);
     static void div_mod (BigNumber&, BigNumber&, BigNumber *, BigNumber *);
-    bool operator < (const BigNumber&);
-    bool operator > (const BigNumber&);
-    bool operator >= (const BigNumber&);
-    bool operator <= (const BigNumber&);
-    bool operator == (const BigNumber&);
-    bool operator != (const BigNumber&);
+    bool operator < (const BigNumber&) const;
+    bool operator > (const BigNumber&) const;
+    bool operator >= (const BigNumber&) const;
+    bool operator <= (const BigNumber&) const;
+    bool operator == (const BigNumber&) const;
+    bool operator != (const BigNumber&) const;
     BigNumber & operator += (const BigNumber&);
     BigNumber & operator -= (const BigNumber&);
     BigNumber & operator *= (base);
@@ -70,7 +70,7 @@ public:
     static BigNumber gen_num_with_bits (size_t num);
     static BigNumber gen_num_with_bits (size_t num_base, size_t size_bits);
     static BigNumber gen_num_less_than (BigNumber & b);
-    int Compare(const BigNumber&);
+    int Compare(const BigNumber&) const;
     static void ReSize(BigNumber&, size_t);
     BigNumber Usual_mul(BigNumber&);
     void usual_mul_mem (const BigNumber&, BigNumber&);
