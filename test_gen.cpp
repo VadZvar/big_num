@@ -1,6 +1,6 @@
 #include "big_num.h"
 
-#define M 40
+#define M 1000
 #define NUM 10
 
 int main() {

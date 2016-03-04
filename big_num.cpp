@@ -192,7 +192,7 @@ BigNumber BigNumber::operator+(const BigNumber& b) const {
     return res;
 }
 
-BigNumber BigNumber::operator-(const BigNumber& b) const {
+BigNumber BigNumber::operator - (const BigNumber& b) const {
     //if (*this < b) throw "< 0";
     size_t size_a = en - bn + 1;
     size_t size_b = b.en - b.bn + 1;
@@ -209,7 +209,7 @@ BigNumber BigNumber::operator-(const BigNumber& b) const {
     for (; i < size_a && buffer; ++i) {
         buffer = (dbase)bn[i] - buffer;
         res.bn[i] = (base)buffer;
-        buffer >>=BBITS;
+        buffer >>= BBITS;
         buffer = (buffer)?1:0;
     }
     for (; i < size_a; ++i) res.bn[i] = bn[i];
@@ -856,7 +856,7 @@ BigNumber & BigNumber::barret (const BigNumber & mod, BigNumber & num){
 		return *this;
 	}
     base *end = en;
-    en = bn + size_mod;
+    en = bn + size_mod - 1;
     for (;*en == 0 && bn < en; --en); //идём до первой ненулевой базы
 	BigNumber r1(*this);
     en = end;
@@ -864,7 +864,7 @@ BigNumber & BigNumber::barret (const BigNumber & mod, BigNumber & num){
 	*this = *this * num;
 	bn += size_mod + 1;
 	*this = *this * mod;
-	en = bn + size_mod;
+	en = bn + size_mod - 1;
     for (; *en == 0 && bn < en; --en);
 
 	if (!(*this > r1)) {
@@ -913,6 +913,7 @@ void BigNumber::fmul_car (const BigNumber& b, BigNumber& res) {
 			size_t num = (mask << 1) + 4 + size_a1 + size_a2 + size_b1 + size_b2 + mm1 + mm2;
 							
 			base * tmp = new base[num];
+            if (!(*tmp)) throw ALLOC_ERR;
 			base * now;	
 			for (now = tmp; now < tmp + num; ++now) {
 				*now = 0;
@@ -1005,6 +1006,7 @@ void BigNumber::fmul_car (const BigNumber& b, BigNumber& res) {
 			num = (size_min << 2) + size_max1 + size_max2;
 
 			base * tmp = new base[num], * now;
+            if (!(*tmp)) throw ALLOC_ERR;
 
 			for (now = tmp; now < tmp + num; ++now) {
 				*now = 0;
@@ -1054,7 +1056,7 @@ void BigNumber::fmul_car (const BigNumber& b, BigNumber& res) {
 
 bool BigNumber::miller_rabin_test() {
     if (!(*this > 3)) {
-        if (*bn == 1) {
+        if (*bn == 1 || *bn == 0) {
             return false;
         }
         else return true;
@@ -1082,7 +1084,8 @@ bool BigNumber::miller_rabin_test() {
 
     r.bn += sbase;
     if (sbits) r >>= sbits;
-    s = BBITS * sbase + sbits;
+    s = BBITS * sbase + sbits; //умножаем 32 на количество нулевых баз и прибавляем колечество нулевых бит в первой ненулевой базе
+    //s - количество двоек на которые нужно поделить n - 1, для становления его нечётным
 
     int i;
     for (i = MR_REL_PARAM; i > 0; --i) {
@@ -1093,7 +1096,7 @@ bool BigNumber::miller_rabin_test() {
         b = b.pow(r, *this);
 
         if (b != 1 && b != decn) {
-            for (int j = 0; j < s -1 && b != decn; ++j) {
+            for (int j = 0; j < s - 1 && b != decn; ++j) {
                 b = b.sqr() % *this;
                 if (b == 1) return false;
             }
@@ -1165,6 +1168,7 @@ BigNumber BigNumber::gen_num_with_bits (size_t num_base, size_t num_bits) {
     srand(ts.tv_nsec);
     base *ba, *en, *bn, *t;
     bn = ba = new base[num_base];
+    if (!ba) throw ALLOC_ERR;
     en = ba + num_base - 1;
 
     if (num_bits >= BBITS) {
@@ -1196,6 +1200,7 @@ BigNumber BigNumber::gen_num_less_than (BigNumber& b) {
     base *ba, *en, *bn, *t, *bt;
     size_t size_b = b.en - b.bn + 1;
     ba = bn = new base[size_b];
+    if (!ba) throw ALLOC_ERR;
     en = bn + size_b - 1;
 
     if (b == 0) {

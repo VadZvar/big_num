@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++11 -ggdb -g3
+CXXFLAGS=-std=c++11 -O2
 INCLUDE_FLAGS=-I.
 
 %.elf:%.cpp big_num.o
