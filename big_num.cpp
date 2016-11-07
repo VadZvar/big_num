@@ -1244,3 +1244,253 @@ BigNumber BigNumber::gen_num_less_than (BigNumber& b) {
     for (t = en - 1; t > ba && !(*t); --t);
     return BigNumber (ba, t - ba + 1, size_b);
 }
+
+bool trail_div(BigNumber_d & div, BigNumber & border) {
+    BigNumber *num = this;
+    BigNumber *d = nullptr, *tmp;
+    size_t size_num = (num -> en) - (num -> bn) + 1;
+    BigNumber *q = new BigNumber(size_num, 0), *r = new BigNumber(size_num, 0), *q2 = new BigNumber(size_num, 0);
+    auto it = div.begin();
+    d = BigNumber::next_d(d);
+    for(;;) {
+        BigNumber::div_mod(*num, *d, q, r);
+        if (r -> en == r -> bn && *(r.bn) == 0) {
+            if (div.empty()) {
+                div.push_back(new BP(new BigNumber(*d), 1));
+            } else {
+                it = div.back();
+                if (*((it) -> num) == *d) {
+                    ++((*it) -> degree);
+                } else {
+                    div.push_back(new BP(new BigNumber(*d), 1));
+                }
+            }
+            tmp = num;
+            num = q;
+            q = tmp;
+
+            if ((num -> bn) == (num -> en) && *(num -> bn) == 1) {
+                delete r,d;
+                if (this == q) {
+                    *q = *num;
+                    delete num;
+                } else delete q;
+                return true;
+            }
+            continue;
+        } else {
+            if (*q < *d){
+                div.push_back(new BP(new BigNumber(*num), 1));
+                delete r, d;
+                if (this == q) {
+                    *q = *num;
+                    delete num;
+                } else delete q;
+                return true;
+            }
+        }
+
+        q -> clean();
+        r -> clean();
+
+        d = BigNumber::next_d(d);
+        if (*d > border) {
+            div.push_back(new BP(new BigNumber(*num), 1));
+            if (this == q) {
+                *q = *num;
+                delete num;
+            } else delete q;
+            delete r, d;
+            return false;
+        }
+    }
+}
+
+BigNumber * BigNumber::next_d(BigNumber *d) {
+    static bool oe = false;
+    if(d) {
+        if (d -> bn) {
+            if ((d -> en) == (d -> bn) && *(d -> bn) < 7) {
+                *(d -> bn) += 2;
+                return d;
+            } else throw "bad d";
+        } 
+    } else {
+        oe = false;
+        return new BigNumber(3);
+    }
+}
+
+void BigNumber::clean() {
+    base * tmp = ba;
+    for (; tmp <= ea; ++tmp) {
+        *tmp = 0;
+    }
+    bn = en = ba;
+}
+
+BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
+    pol_tup slow(1, 0, 0), fast(1, 0, 0);
+    BigNumber n = p - 1, tmp(0), rev_tmp(0), r(0), nn(0);
+    bool fl;
+    BigNumber m = n.sqrt();
+    for (;;) {
+        f_pollard(slow, *this, g, p, n);
+        f_pollard(fast, *this, g, p, n);
+        f_pollard(fast, *this, g, p, n);
+        if (fast.x == slow.x) {
+            if (fast.b > slow.b) {
+                fl = true;
+                tmp = fast.b - slow.b;
+            } else {
+                fl = false;
+                tmp = slow.b - fast.b;
+            }
+
+            r = tmp.gcd(n);
+            if (r.en == r.bn && *r.bn == 0) {
+                slow.y = BigNumber::gen_num_less_than(n);
+                slow.b = BigNumber::gen_num_less_than(n);
+                slow.x = g.pow(slow.y, p);
+                r = this -> pow(slow.b, p);
+                slow.x *= r;
+                slow.x = slow.x % p;
+                fast.x = slow.x;
+                fast.y = slow.y;
+                fast.b = slow.b;
+                continue;
+            }
+            if (r > m) {
+                 slow.y = BigNumber::gen_num_less_than(n);
+                 slow.b = BigNumber::gen_num_less_than(n);
+                 slow.x = g.pow(slow.y, p);
+                 r = this -> pow(slow.b, p);
+                 slow.x *= r;
+                 slow.x = slow.x % p;
+                 fast.x = slow.x;
+                 fast.y = slow.y;
+                 fast.b = slow.b;
+                 continue;
+            }
+
+            if (r.en == r.bn && *r.bn == 1) {
+                rev_tmp = tmp.inverse_mod(n);
+                if (!fl) {
+                    return ((((n + fast.y) - slow.y)) * rev_tmp) % n;
+                } else return ((((n + slow.y) - fast.y)) * rev_tmp) % n;
+            } else {
+                tmp = tmp / r;
+                nn = n / r;
+                rev_tmp = tmp.inverse_mod(nn);
+                 if (!fl) {
+                    return ((((n + fast.y) - slow.y)) * rev_tmp) % nn;
+                } else return ((((n + slow.y) - fast.y)) * rev_tmp) % nn;
+
+                r = tmp;
+                for (;;) {
+                    if (g.pow(tmp, p) == *this) {
+                        return tmp;
+                    }
+                    tmp += nn;
+                    if (tmp > n) {
+                        tmp = tmp % n;
+                    }
+                    if (tmp == r) {
+                        throw "nope";
+                    }
+                }
+            }
+        }
+    }
+}
+
+void BigNumber::f_pollard(pol_tup & tup, BigNumber & a, BigNumber & g, BigNumber & p, BigNumber & n) {
+    base c = tup.x % 3;
+    if (c == 1) {
+        tup.x = (tup.x * a) % p;
+        tup.b = (tup.b + 1) % n;
+    } else if (c == 2) {
+        tup.x = tup.x.sqr() % p;
+        tup.y = (tup.y << 1) % n;
+        tup.b = (tup.b << 1) % n;
+    } else {
+        tup.x = (tup.x * g) % p;
+        tup.y = (tup.y + 1) % n;
+    }
+}
+
+BigNumber BigNumber::gcd(BigNumber & n) {
+    base *tmp;
+    BigNumber a(*this), b(n);
+    if (b > a) {
+        tmp = b.bn;
+        b.bn = a.bn;
+        a.bn = tmp;
+        tmp = b.en;
+        b.en = a.en;
+        a.en = tmp;
+        tmp = b.ba;
+        b.ba = a.ba;
+        a.ba = tmp;
+        tmp = b.ea;
+        b.ea = a.ea;
+        a.ea = tmp;
+    }
+    BigNumber r = a % b;
+    for (; r.en == r.bn && *r.bn == 1;) {
+        a = b;
+        b = r;
+        r = a % b;
+    }
+    return b;
+}
+
+BigNumber BigNumber::inverse_mod(BigNumber & mod) {
+    base * tmp;
+    BigNumber a(mod), x1(0), x2(1), y1(1), y(0), tmp1(1), q(en - bn + 1, 0), r(en - bn + 1, 0);
+    BigNumber b = *this % mod;
+    BigNumber::div_mod(a, b, &q, &r);
+
+    for (;!( r.en == r.bn && *r.bn == 0);) {
+        tmp1 = (q * y2) % mod;
+        if (tmp1 > y1) {
+            tmp1 = (mod + y1) - tmp1; 
+        } else tmp1 = y1 - tmp1;
+        y1 = y2;
+        y2 = tmp1;
+        tmp1 = (q * x2) % mod;
+        if (tmp1 > x1) {
+            tmp1 = (mod + x1) - tmp1;
+        } else tmp1 = x1 - tmp1;
+        x1 = x2;
+        x2 = tmp1;
+        a = b;
+        b = r;
+        BigNumber::div_mod(a, b, &q, &r);
+    }
+
+    if (!(b.bn == b.en && *b.bn == 1)) {
+        throw "bad mod";
+    }
+    return y2;
+}
+
+void BigNumber::sqrt(BigNumber &res, BigNumber &q) {
+    if (!q) throw "bad q";
+
+    size_t num_size = en - bn + 1;
+    size_t res_sezr = (num_size >> 1) + 2;
+    BigNumber::resize(res, res_size);
+    q -> clean();
+    q -> bn[res_size - 1] = 1;
+    q -> en = q -> bn + res_size - 1;
+
+    do {
+        res.light_copy(*q);
+        BigNumber::div_mod(*this, res, q, nullptr);
+        *q += res;
+        *q >>= 1;
+    } while (res > *q);
+
+    return;
+}
