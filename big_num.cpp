@@ -1494,3 +1494,85 @@ void BigNumber::sqrt(BigNumber &res, BigNumber &q) {
 
     return;
 }
+
+bool BigNumber::ro_pollard(BigNumber_d & div) {
+    BigNumber a(2), b(2), c(1), d(1);
+    for (;;) {
+        a = a.sqr();
+        a += c;
+        a = a % *this;
+        b = b.sqr();
+        b += c;
+        b = b % *this;
+        b = b.sqr();
+        b += c;
+        b = b % *this;
+        if (b == a) return false;
+        if (a < b) {
+            d = (b - a).gcd(*this);
+        } else {
+            d = (a - b).gcd(*this);
+        }
+        if (!(d.en == d.bn && *d.bn == 1)) {
+            div.push_back(new BP(new BigNumber(), 1));
+            d = *this / d;
+            div.push_back(new BP(new BigNumber(d), 1));
+            return true;
+        }
+    }
+}
+
+bool BigNumber::p_1_pollard(BigNumber_d & div, base B, base lim) {
+    std::vector<base> primes;
+    BigNumber n_m(*this);
+    BigNumber a(en - bn + 1, 0);
+    n_m -= 1;
+    BigNumber d;
+    BigNumber q(en - bn + 1, 0);
+    base l;
+    size_t size_n = en - bn + 1, size_e;
+    base log_2_n;
+    base shft = 31, mask = ((base)1) << (BBITS - 1);
+
+    generate_base_less_border(primes, B);
+
+    for (; !(mask & *en); --shft, mask >>= 1);
+    log_2_n = size_n * BBITS + shft;
+
+    for(;;) {
+        a = BigNumber::gen_num_less_than(n_m);
+        for (auto i = primes.begin(); i != primes.end(); ++i) {
+            shft = 31, mask = ((base)1) << (BBITS - 1);
+            for (; !(mask & *i); --shft, mask >>= 1);
+            l = log_2_n / shft + 1;
+            q.clean();
+            *q.bn  = *i;
+            q = q.pow(l);
+            a = a.pow(q, *this);
+        }
+
+        if (a.en == a.bn && *a.bn == 1) continue;
+
+        d = (a - 1).gcd(*this);
+
+        if ((d.bn != d.en || *d.bn > 1) && d < *this) {
+            BigNumber q = *this / d;
+            div.push_back(new BP(new BigNumber(q), 1));
+            div.push_back(new BP(new BigNumber(d), 1));
+            break;
+        } else {
+            if (lim == 0) {
+                return false;
+            } else {
+                --lim;
+            }
+            l = B + B_STEP;
+            if (l > B) {
+                B = l;
+            } else return false;
+
+            generate_base_less_border(primes, B);
+        }
+    }
+    return true;
+}
