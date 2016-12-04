@@ -14,6 +14,7 @@
 #define MR_REL_PARAM 10
 
 using namespace std;
+
 typedef uint32_t base;
 typedef uint64_t dbase;
 
@@ -77,6 +78,49 @@ public:
     void minus (const BigNumber&, BigNumber&);
     void plus (const BigNumber&, BigNumber&) const;
     size_t bitsize();
+    void factor (BigNumber_d &);
+    static BigNumber * next_d (BigNumber *);
+    bool trial_div (BigNumber_d &, BigNumber &);
+    void clean();
+    BigNumber pow (base, BigNumber &);
+    BigNumber pow (base);
+    BigNumber sqrt();
+    BigNumber gcd (BigNumber &);
+    BigNumber inverse_mod (BigNumber &);
+    void sqrt (BigNumber &, BigNubmer *);
+    void light_copy (Bignumber &);
+    void f_pollard (pol_tup &, BigNumber &, BigNumber &, BigNumber &, BigNumber &);
+    static std::vector<base> generate_base (base k);
+    bool ro_pollard (BigNumber_d &);
+    bool p_1_pollard (BigNumber_d &, base, base);
+    static void generate_base_less_border (std::vector<base> &, base);
+};
+
+struct BP {
+    BigNumber *num;
+    uint degree;
+
+    BP (BigNumber *n = nullptr, uint deg = 0) {
+        degree = deg;
+        num = n;
+    }
+
+    ~BP() {
+        if (num) {
+            delete num;
+        }
+    }
+    static bool cmp (BP *x, BP *y) {
+        return *(x -> num) < *(y -> num);
+    }
+};
+
+struct pol_tup {
+    BigNumber x, y, b;
+    pol_tup():x(0), y(0), b(0) {}
+    pol_tup(BigNumber & a, BigNumber & z, BigNumber &c):x(a), y(z), b(c) {}
+    pol_tup(base a, base z, base c):x(a), y(z), b(c) {}
+    ~pol_tup(){}
 };
 
 #endif

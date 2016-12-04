@@ -1495,6 +1495,74 @@ void BigNumber::sqrt(BigNumber &res, BigNumber &q) {
     return;
 }
 
+BigNumber BigNumber::sqrt() {
+    size_t num_size = en - bn + 1;
+    size_t a_size = (num_size >> 1) + 2;
+    BigNumber a(a_size, 0);
+    BigNumber *q = new BigNumber(a_size, 0);
+    q -> bn[a_size - 1] = 1;
+    q -> en = q -> bn + a_size - 1;
+
+    do {
+        a.light_copy(*q);
+        BigNumber::div_mod(*this, a, q, nullptr);
+        *q += a;
+        *q >>= 1;
+    } while (a > *q);
+
+    delete q;
+
+    return a;
+}
+
+void BigNumber::light_copy(BigNumber & b) {
+    base *tmp1, tmp2;
+    
+    for (tmp1 = ba; tmp1 <= ea; ++tmp1) {
+        tmp1 = 0;
+    }
+
+    for (tmp1 = ba, tmp2 = b.bn; tmp1 <= ea && tmp2 = b.en; ++tmp1, ++tmp2) {
+        *tmp1 = *tmp2;
+    }
+
+    bn = ba;
+
+    if (tmp1 > ea && tmp2 <= b.en) {
+        throw "not light"
+    }
+
+    en = tmp - 1;
+}
+
+BigNumber BigNumber::pow(base n) {
+    BigNumber a(*this), res(1);
+    
+    for (;n; n >>= 1) {
+        if (n & 1) {
+            res *= a;
+        }
+        a = a.sqr();
+    }
+    return res;
+}
+
+BigNumber BigNumber::pow(base b, BigNumber & b) {
+    BigNumber a(*this), res(1);
+    base tmp;
+
+    for (;n; n >>= 1) {
+        if (n & 1) {
+            res *= a;
+            if (res > b) {
+                return res;
+            }
+        }
+        a = a.sqr();
+    }
+    return res;
+}
+
 bool BigNumber::ro_pollard(BigNumber_d & div) {
     BigNumber a(2), b(2), c(1), d(1);
     for (;;) {
@@ -1575,4 +1643,156 @@ bool BigNumber::p_1_pollard(BigNumber_d & div, base B, base lim) {
         }
     }
     return true;
+}
+
+bool BigNumber::ferma_with_shft(BigNumber_d &div) {
+    base r = FERMA_BASE;
+    std::vector<base> primes = generate_base(r);
+    std::vector<base> ki;
+    std::vector<uint8_t *> s;
+    base tmp, jac;
+    uint8_t *t;
+}
+
+void BigNumber::generate_base_less_border(std::vector<base> & primes, base B) {
+    bool fl = false;
+    base l;
+
+    if (primes.empty()) {
+        primes.push_back(2);
+        l = 3;
+    } else {
+        l = primes.back();
+        if (!(l & 1)) {
+            l = 3;
+        }
+    }
+
+    for (base c = l; c < B; c += 2) {
+        fl = true;
+        for (auto i = primes.begin(); i < primes.end(); ++i) {
+            if ((c % *i) == 0) {
+                fl = false;
+                break;
+            }
+        }
+        if (fl) {
+            primes.push_back(c);
+            fl = false;
+        }
+    }
+}
+
+std::vector<base> BigNumber::generate_base(base k) {
+    bool fl = false;
+    std::vector<base> primes;
+    primes.push_back(2);
+    base count;
+
+    for (base c = 3, count = 1; count < k; c += 2) {
+        fl = true;
+        for (auto i = primes.begin(); i != primes.end(); ++i) {
+            if ((c % *i) == 0) {
+                fl = false;
+                break;
+            }
+        }
+        if (fl) {
+            primes.push_back(c);
+            count++;
+            fl = false;
+        }
+    }
+    return primes;
+}
+
+BigNumber_d BigNumber::factor() {
+    BigNumber_d div;
+    
+    if (en == bn) {
+        if (*bn == 0) {
+            throw "div zero";
+        } else if (*bn == 1) {
+            return div;
+        }
+    }
+
+    if (this -> is_prime()) {
+        div.push_back(new BP(new BigNumber(*this), 1));
+        return div;
+    }
+
+    BigNumber a(*this);
+    if (!((*(a.bn) & 1))) {
+        uint shft = 0;
+        for (;*(a.bn) == 0 && a.bn < a.en; shft  += BBITS, ++(a.bn));
+        base tmp = *(a.bn);
+        for (; (tmp & 1) == 0; ++shft, tmp >>= 1);
+        a >>= (shft & (BBITS - 1));
+        div.push_back(new BP(new BigNumber(2), shft));
+    }
+
+    if (a.en == a.bn && *(a.bn) == 1) {
+        return div;
+    }
+
+    BigNumber *border;
+    border = new BigNumber(TRIAL_BORDER);
+
+    if (a.trial_div(div, *border)) {
+        delete border;
+        return div;
+    }
+
+    BP * b = div.back();
+    BigNumber *num = b -> num;
+
+    if (num -> is_prime()) {
+        delete border;
+        return div;
+    }
+
+    div.pop_back();
+    b -> num = nullptr;
+    delete b;
+    std::queue<BP *> q;
+    BigNumber_d div1;
+
+    for (; !q.empty();) {
+        b = q.front();
+        q.pop();
+        div1.clear();
+        if (!b -> num -> p_1_pollard(div1, P_M_BORDER, 10) && !b -> num -> ro_pollard(div1)) {
+            b -> num -> ferma_with_shft(div1);
+        }
+        for (auto i = div1.begin(); i != div1.end();) {
+            if ((*i) -> num -> is_prime()) {
+                div.push_back(*i);
+            } else {
+                q.push(*i);
+            }
+            i = div1.erase(i);
+            if (i == div1.end()) {
+                break;
+            }
+        }
+    }
+    for (auto i = div.begin(); i != div.end(); ++i) {
+        auto j = i;
+        ++j;
+        for (; j != div.end();) {
+            if (((*j) -> num) == ((*i) -> num)) {
+                (*i) -> degree += (*j) -> degree;
+                j = div.erase(j);
+                if (j == div.end()) {
+                    break;
+                }
+            } else {
+                ++j;
+            }
+        }
+    }
+
+    delete border;
+    return div;
 }
