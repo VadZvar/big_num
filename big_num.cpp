@@ -1652,6 +1652,51 @@ bool BigNumber::ferma_with_shft(BigNumber_d &div) {
     std::vector<uint8_t *> s;
     base tmp, jac;
     uint8_t *t;
+
+    for (auto i = primes.begin(); i != primes.end(); ++i) {
+        tmp = *this % *i;
+        tmp = *i - tmp;
+        t = new uint8_t[*i];
+        for (dbase j = 0; j < *i; ++j) {
+            jac = (j * j + tmp) % *i;
+            if (-1 != jac_simb(jac, *i)) {
+                t[j] = 1;
+            } else {
+                t[j] = 0;
+            }
+        }
+        s.push_back(t);
+    }
+
+    BigNumber x = this -> sqrt(), z(0), y(0);
+
+    if (x.sqr() == *this) {
+        div.push_back(new BP(new BigNumber(x), 2));
+        return false;
+    }
+
+    x += 1;
+    BigNumber tall = (*this + 1) >> 1;
+    for (auto i = primes.begin(); i != primes.end(); ++i) {
+        ki.push_back(x % *i);
+    }
+    for (;;) {
+        base l = 0;
+        bool fl = true;
+        for (auto i = ki.begin(); i != ki.end(); ++i, ++l) {
+            if (s[l][*i] == 0) {
+                fl = false;
+                break;
+            }
+        }
+        if (fl) {
+            z = x.sqr() - *this;
+            y = z.sqrt();
+            if (y.sqr() == z) {
+                z = x + y;
+            }
+        }
+    }
 }
 
 void BigNumber::generate_base_less_border(std::vector<base> & primes, base B) {

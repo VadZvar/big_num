@@ -14,12 +14,12 @@ int main(int argc, char * argv[]){
 		a = BigNumber::random(m);
 		b = BigNumber::random(n);
 		try {
-		c = a.fmul(b);
-        d = a * b;
+            std::cout << "c = " << a * b << std::endl;
+        //d = a * b;
         //std::cout << "a = " << a << std::endl << "b = " << b << std::endl << "c = " << c = a.fmul(b) << std::endl;
         //std::cout << "a = " << a << std::endl << "b = " << b << std::endl << "c = " << d = a * b << std::endl;
         //std::cout << ((d == c) ? ("True") : ("False")) << std::endl;
-        if (c == d) {
+        /*if (c == d) {
             std::cout << "True" << std::endl;
         }
         else {
@@ -28,7 +28,7 @@ int main(int argc, char * argv[]){
         
         }
 
-
+*/
 		} catch(const char * e) {
 			std::cout << e << std::endl;
 		}
