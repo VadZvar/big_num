@@ -582,6 +582,12 @@ BigNumber BigNumber::operator / (base b) const {
     return res;
 }
 
+base BigNumber::operator % (base b) const {
+    base res;
+    div_mod (*this, b, nullptr, &res);
+    return res;
+}
+
 BigNumber BigNumber::operator * (base b) {
     dbase buffer = 0;
     int i;
@@ -1245,7 +1251,7 @@ BigNumber BigNumber::gen_num_less_than (BigNumber& b) {
     return BigNumber (ba, t - ba + 1, size_b);
 }
 
-bool BigNumber::trail_div(BigNumber_d & div, BigNumber & border) {
+bool BigNumber::trial_div(BigNumber_d & div, BigNumber & border) {
     BigNumber *num = this;
     BigNumber *d = nullptr, *tmp;
     size_t size_num = (num -> en) - (num -> bn) + 1;
@@ -1254,13 +1260,13 @@ bool BigNumber::trail_div(BigNumber_d & div, BigNumber & border) {
     d = BigNumber::next_d(d);
     for(;;) {
         BigNumber::div_mod(*num, *d, q, r);
-        if (r -> en == r -> bn && *(r.bn) == 0) {
+        if (r -> en == r -> bn && *(r -> bn) == 0) {
             if (div.empty()) {
                 div.push_back(new BP(new BigNumber(*d), 1));
             } else {
-                it = div.back();
-                if (*((it) -> num) == *d) {
-                    ++((*it) -> degree);
+                auto ti = div.back();
+                if (*((ti) -> num) == *d) {
+                    ++((ti) -> degree);
                 } else {
                     div.push_back(new BP(new BigNumber(*d), 1));
                 }
@@ -1313,8 +1319,14 @@ BigNumber * BigNumber::next_d(BigNumber *d) {
             if ((d -> en) == (d -> bn) && *(d -> bn) < 7) {
                 *(d -> bn) += 2;
                 return d;
-            } else throw "bad d";
-        } 
+            } else {
+				*d += (oe)?(2):(4);
+				oe = !oe;
+				return d;
+			}
+        } else {
+			throw "bad d";
+		}
     } else {
         oe = false;
         return new BigNumber(3);
@@ -1405,7 +1417,7 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
 }
 
 void BigNumber::f_pollard(pol_tup & tup, BigNumber & a, BigNumber & g, BigNumber & p, BigNumber & n) {
-    base c = tup.x % 3;
+    base c = *tup.x.bn % 3;
     if (c == 1) {
         tup.x = (tup.x * a) % p;
         tup.b = (tup.b + 1) % n;
@@ -1447,7 +1459,7 @@ BigNumber BigNumber::gcd(BigNumber & n) {
 
 BigNumber BigNumber::inverse_mod(BigNumber & mod) {
     base * tmp;
-    BigNumber a(mod), x1(0), x2(1), y1(1), y(0), tmp1(1), q(en - bn + 1, 0), r(en - bn + 1, 0);
+    BigNumber a(mod), x1(0), x2(1), y1(1), y2(0), tmp1(1), q(en - bn + 1, 0), r(en - bn + 1, 0);
     BigNumber b = *this % mod;
     BigNumber::div_mod(a, b, &q, &r);
 
@@ -1475,12 +1487,12 @@ BigNumber BigNumber::inverse_mod(BigNumber & mod) {
     return y2;
 }
 
-void BigNumber::sqrt(BigNumber &res, BigNumber &q) {
+void BigNumber::sqrt(BigNumber &res, BigNumber *q) {
     if (!q) throw "bad q";
 
     size_t num_size = en - bn + 1;
-    size_t res_sezr = (num_size >> 1) + 2;
-    BigNumber::resize(res, res_size);
+    size_t res_size = (num_size >> 1) + 2;
+    BigNumber::ReSize(res, res_size);
     q -> clean();
     q -> bn[res_size - 1] = 1;
     q -> en = q -> bn + res_size - 1;
@@ -1516,23 +1528,23 @@ BigNumber BigNumber::sqrt() {
 }
 
 void BigNumber::light_copy(BigNumber & b) {
-    base *tmp1, tmp2;
+    base *tmp1, *tmp2;
     
     for (tmp1 = ba; tmp1 <= ea; ++tmp1) {
         tmp1 = 0;
     }
 
-    for (tmp1 = ba, tmp2 = b.bn; tmp1 <= ea && tmp2 = b.en; ++tmp1, ++tmp2) {
+    for (tmp1 = ba, tmp2 = b.bn; tmp1 <= ea && tmp2 <= b.en; ++tmp1, ++tmp2) {
         *tmp1 = *tmp2;
     }
 
     bn = ba;
 
     if (tmp1 > ea && tmp2 <= b.en) {
-        throw "not light"
+        throw "not light";
     }
 
-    en = tmp - 1;
+    en = tmp1 - 1;
 }
 
 BigNumber BigNumber::pow(base n) {
@@ -1547,7 +1559,7 @@ BigNumber BigNumber::pow(base n) {
     return res;
 }
 
-BigNumber BigNumber::pow(base b, BigNumber & b) {
+BigNumber BigNumber::pow(base n, BigNumber & b) {
     BigNumber a(*this), res(1);
     base tmp;
 
@@ -1706,8 +1718,8 @@ bool BigNumber::ferma_with_shft(BigNumber_d &div) {
 
         x += 1;
         if (!(x < tall)) {
-            for (auto si = s.begin(); s != s.end(); ++si) {
-                delete si;
+            for (auto si = s.begin(); si != s.end(); ++si) {
+                delete *si;
             }
             return true;
         }
@@ -1905,3 +1917,38 @@ BigNumber_d BigNumber::factor() {
     delete border;
     return div;
 }
+
+BigNumber BigNumber::prime_root(BigNumber & p) {
+	BigNumber n = p - 1;
+	BigNumber a = BigNumber::gen_num_less_than(n);
+	BigNumber_d div = n.factor();
+	BigNumber e(n.en - n.bn + 1, 0);
+	BigNumber b;
+
+	if (a.bn == a.en && *a.bn == 1) {
+		a += 1;
+	}
+
+	bool fl = true;
+
+	for(;;) {
+		for (auto i = div.begin(); i != div.end(); ++i) {
+			div_mod(n, *((*i) -> num), &e, nullptr);
+			b = a.pow(e, p);
+			if (b.en == b.bn && *b.bn == 1) {
+				fl = false;
+				break;
+			}
+		}
+		if (fl) {
+			return a;
+		} else {
+			a += 1;
+			if (!(a < n)) {
+				a = BigNumber::gen_num_less_than(n);
+			}
+			fl = true;
+		}
+	}
+}
+

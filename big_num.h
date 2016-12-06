@@ -5,6 +5,9 @@
 #include <fstream>
 #include <cstdint>
 #include <stack>
+#include <list>
+#include <vector>
+#include <queue>
 
 #define ALLOC_ERR "ALLOCATION ERROR"
 #define BBITS 32
@@ -23,7 +26,10 @@ using namespace std;
 
 typedef uint32_t base;
 typedef uint64_t dbase;
-
+typedef unsigned int uint;
+struct BP;
+typedef std::list<BP *> BigNumber_d;
+struct pol_tup;
 class BigNumber {
 
 public:
@@ -54,6 +60,7 @@ public:
     BigNumber operator * (const BigNumber&);
     BigNumber operator * (base);
     BigNumber operator / (base) const;
+	base operator % (base) const;
     BigNumber operator / (BigNumber&);
     BigNumber operator % (BigNumber&);
     BigNumber operator >> (int num) const;
@@ -84,7 +91,7 @@ public:
     void minus (const BigNumber&, BigNumber&);
     void plus (const BigNumber&, BigNumber&) const;
     size_t bitsize();
-    void factor (BigNumber_d &);
+    BigNumber_d factor ();
     static BigNumber * next_d (BigNumber *);
     bool trial_div (BigNumber_d &, BigNumber &);
     void clean();
@@ -93,6 +100,7 @@ public:
     BigNumber sqrt();
     BigNumber gcd (BigNumber &);
     BigNumber inverse_mod (BigNumber &);
+	BigNumber discret_log (BigNumber &, BigNumber &);
     void sqrt (BigNumber &, BigNumber *);
     void light_copy (BigNumber &);
     void f_pollard (pol_tup &, BigNumber &, BigNumber &, BigNumber &, BigNumber &);
@@ -104,6 +112,7 @@ public:
     static void generate_base_less_border(std::vector<base> &primes, base B);
     static int jac_simb(base, base);
     static int jac_simb(BigNumber &, base);
+	static BigNumber prime_root(BigNumber &);
 };
 
 struct BP {
