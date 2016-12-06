@@ -1,12 +1,14 @@
 #include <big_num.h>
 
 int main () {
-    BigNumber a(0), b(0), c(0);
-    std::cin >> a >> b >> c;
-    try {
-        std::cout << "a = " << a << std::endl << "b = " << b << std::endl << "c = " << c << std::endl << "z = " << a.pow(b, c) << std::endl;
-    } catch (const char * z) {
-        std::cout << z << std::endl;
+    BigNumber a = BigNumber::gen_num_with_bits(100);
+    BigNumber_d div;
+    std::cout << a << std::endl;
+    div = a.factor();
+    std::cout << a << "==";
+    for (auto i = div.begin(); i != div.end(); ++i) {
+        std::cout << *((*i) -> num) << "**" << (*i) -> degree << " * ";
     }
+    std::cout << std::endl;
     return 0;
 }

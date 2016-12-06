@@ -1245,7 +1245,7 @@ BigNumber BigNumber::gen_num_less_than (BigNumber& b) {
     return BigNumber (ba, t - ba + 1, size_b);
 }
 
-bool trail_div(BigNumber_d & div, BigNumber & border) {
+bool BigNumber::trail_div(BigNumber_d & div, BigNumber & border) {
     BigNumber *num = this;
     BigNumber *d = nullptr, *tmp;
     size_t size_num = (num -> en) - (num -> bn) + 1;
@@ -1694,9 +1694,73 @@ bool BigNumber::ferma_with_shft(BigNumber_d &div) {
             y = z.sqrt();
             if (y.sqr() == z) {
                 z = x + y;
+                div.push_back(new BP(new BigNumber(z), 1));
+                z = x - y;
+                div.push_back(new BP(new BigNumber(z), 1));
+                for (auto si = s.begin(); si != s.end(); ++si) {
+                    delete *si;
+                }
+                return false;
             }
         }
+
+        x += 1;
+        if (!(x < tall)) {
+            for (auto si = s.begin(); s != s.end(); ++si) {
+                delete si;
+            }
+            return true;
+        }
+
+        for (auto i = ki.begin(), it = primes.begin(); i != ki.end() && it != primes.end(); ++i, ++it){
+            *i = (*i + 1) % *it;
+        }
     }
+}
+
+int BigNumber::jac_simb(base a, base p) {
+    if (p == 0) {
+        throw "now pr";
+    }
+
+    if ((a % p) == 0) {
+        return 0;
+    }
+
+    int res = 1, tmp;
+    for (; a != 1;) {
+        base shft;
+        if (!(a & 1)) {
+            shft = 0;
+            for (; (a & 1) == 0 && a; ++shft, a >>= 1);
+            if (shft & 1) {
+                if(((((dbase)p) * ((dbase)p) - 1) >> 3) & 1) {
+                    res = -res;
+                }
+            }
+        }
+        if (a == 1) {
+            return res;
+        }
+
+        tmp = p % a;
+        if (!tmp) {
+            throw "bad p";
+        }
+
+        if (((p - 1) >> 1) & ((a - 1) >> 1) & 1) {
+            res = -res;
+        }
+
+        p = a;
+        a = tmp;
+    }
+    return res;
+}
+
+int BigNumber::jac_simb(BigNumber &a, base p) {
+    base new_a = a % p;
+    return jac_simb(new_a, p);
 }
 
 void BigNumber::generate_base_less_border(std::vector<base> & primes, base B) {

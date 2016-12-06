@@ -12,6 +12,12 @@
 #define DBASE_MASK(N) ((dbase)1) << (((N % 64) << 1) - 1)
 #define CAR_BORDER 50
 #define MR_REL_PARAM 10
+#define TRIAL_BORDER_SIZE ((int)2)
+#define TRIAL_BORDER 100
+#define ERATE_BORDER ((int)10000)
+#define FERMA_BASE 10
+#define B_STEP 100
+#define P_M_BORDER 3000
 
 using namespace std;
 
@@ -87,13 +93,17 @@ public:
     BigNumber sqrt();
     BigNumber gcd (BigNumber &);
     BigNumber inverse_mod (BigNumber &);
-    void sqrt (BigNumber &, BigNubmer *);
-    void light_copy (Bignumber &);
+    void sqrt (BigNumber &, BigNumber *);
+    void light_copy (BigNumber &);
     void f_pollard (pol_tup &, BigNumber &, BigNumber &, BigNumber &, BigNumber &);
+    //BigNumber a(0), b(0), c(0);
     static std::vector<base> generate_base (base k);
     bool ro_pollard (BigNumber_d &);
+    bool ferma_with_shft(BigNumber_d &);
     bool p_1_pollard (BigNumber_d &, base, base);
-    static void generate_base_less_border (std::vector<base> &, base);
+    static void generate_base_less_border(std::vector<base> &primes, base B);
+    static int jac_simb(base, base);
+    static int jac_simb(BigNumber &, base);
 };
 
 struct BP {
