@@ -1264,10 +1264,14 @@ bool BigNumber::trial_div(BigNumber_d & div, BigNumber & border) {
             if (div.empty()) {
                 div.push_back(new BP(new BigNumber(*d), 1));
             } else {
-                auto ti = div.back();
-                if (*((ti) -> num) == *d) {
-                    ++((ti) -> degree);
-                } else {
+                it = --div.end();
+                if (*((*it) -> num) == *d) {
+                    ++((*it) -> degree);
+                }
+                /*auto ti = --div.end();
+                if (*((*ti) -> num) == *d) {
+                    ++((*ti) -> degree);
+                }*/else {
                     div.push_back(new BP(new BigNumber(*d), 1));
                 }
             }
@@ -1395,9 +1399,12 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
                 nn = n / r;
                 rev_tmp = tmp.inverse_mod(nn);
                  if (!fl) {
-                    return ((((n + fast.y) - slow.y)) * rev_tmp) % nn;
-                } else return ((((n + slow.y) - fast.y)) * rev_tmp) % nn;
-
+                    //return ((((n + fast.y) - slow.y)) * rev_tmp) % nn;
+                    tmp = ((((n + fast.y) - slow.y)) * rev_tmp) % nn;
+                } else {
+                    tmp = ((((n + slow.y) - fast.y)) * rev_tmp) % nn;
+                    //return ((((n + slow.y) - fast.y)) * rev_tmp) % nn;
+                }
                 r = tmp;
                 for (;;) {
                     if (g.pow(tmp, p) == *this) {
@@ -1417,7 +1424,7 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
 }
 
 void BigNumber::f_pollard(pol_tup & tup, BigNumber & a, BigNumber & g, BigNumber & p, BigNumber & n) {
-    base c = *tup.x.bn % 3;
+    base c = tup.x % 3;
     if (c == 1) {
         tup.x = (tup.x * a) % p;
         tup.b = (tup.b + 1) % n;
@@ -1449,7 +1456,7 @@ BigNumber BigNumber::gcd(BigNumber & n) {
         a.ea = tmp;
     }
     BigNumber r = a % b;
-    for (; r.en == r.bn && *r.bn == 1;) {
+    for (; !(r.en == r.bn && *r.bn == 0);) {
         a = b;
         b = r;
         r = a % b;
@@ -1459,11 +1466,11 @@ BigNumber BigNumber::gcd(BigNumber & n) {
 
 BigNumber BigNumber::inverse_mod(BigNumber & mod) {
     base * tmp;
-    BigNumber a(mod), x1(0), x2(1), y1(1), y2(0), tmp1(1), q(en - bn + 1, 0), r(en - bn + 1, 0);
+    BigNumber a(mod), y1(0), y2(1), x1(1), x2(0), tmp1(1), q(en - bn + 1, 0), r(en - bn + 1, 0);
     BigNumber b = *this % mod;
     BigNumber::div_mod(a, b, &q, &r);
 
-    for (;!( r.en == r.bn && *r.bn == 0);) {
+    for (;!(r.en == r.bn && *r.bn == 0);) {
         tmp1 = (q * y2) % mod;
         if (tmp1 > y1) {
             tmp1 = (mod + y1) - tmp1; 
@@ -1561,8 +1568,8 @@ BigNumber BigNumber::pow(base n) {
 
 BigNumber BigNumber::pow(base n, BigNumber & b) {
     BigNumber a(*this), res(1);
-    base tmp;
-
+    base tmp, *p1;
+    
     for (;n; n >>= 1) {
         if (n & 1) {
             res *= a;
@@ -1594,7 +1601,7 @@ bool BigNumber::ro_pollard(BigNumber_d & div) {
             d = (a - b).gcd(*this);
         }
         if (!(d.en == d.bn && *d.bn == 1)) {
-            div.push_back(new BP(new BigNumber(), 1));
+            div.push_back(new BP(new BigNumber(d), 1));
             d = *this / d;
             div.push_back(new BP(new BigNumber(d), 1));
             return true;
@@ -1626,7 +1633,7 @@ bool BigNumber::p_1_pollard(BigNumber_d & div, base B, base lim) {
             for (; !(mask & *i); --shft, mask >>= 1);
             l = log_2_n / shft + 1;
             q.clean();
-            *q.bn  = *i;
+            *q.bn = *i;
             q = q.pow(l);
             a = a.pow(q, *this);
         }
@@ -1735,7 +1742,7 @@ int BigNumber::jac_simb(base a, base p) {
         throw "now pr";
     }
 
-    if ((a % p) == 0) {
+    if ((a = a % p) == 0) {
         return 0;
     }
 
