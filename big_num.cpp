@@ -1304,6 +1304,7 @@ bool BigNumber::trial_div(BigNumber_d & div, BigNumber & border) {
         r -> clean();
 
         d = BigNumber::next_d(d);
+        //std::cout << "d = " << *d << std::endl;
         if (*d > border) {
             div.push_back(new BP(new BigNumber(*num), 1));
             if (this == q) {
@@ -1364,6 +1365,8 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
             }
 
             r = tmp.gcd(n);
+            std::cout << "n = " << n << std::endl;
+            std::cout << "r = " << r << std::endl;
             if (r.en == r.bn && *r.bn == 0) {
                 slow.y = BigNumber::gen_num_less_than(n);
                 slow.b = BigNumber::gen_num_less_than(n);
@@ -1859,7 +1862,7 @@ BigNumber_d BigNumber::factor() {
         a >>= (shft & (BBITS - 1));
         div.push_back(new BP(new BigNumber(2), shft));
     }
-
+    std::cout << a << std::endl;
     if (a.en == a.bn && *(a.bn) == 1) {
         return div;
     }
@@ -1869,6 +1872,10 @@ BigNumber_d BigNumber::factor() {
 
     if (a.trial_div(div, *border)) {
         delete border;
+        //std::cout << "nachalo ";
+        //for (auto &x: div)
+         //   std::cout << x << ' ';
+        //std::cout << std::endl;
         return div;
     }
 
@@ -1891,6 +1898,7 @@ BigNumber_d BigNumber::factor() {
         q.pop();
         div1.clear();
         if (!b -> num -> p_1_pollard(div1, P_M_BORDER, 10) && !b -> num -> ro_pollard(div1)) {
+            //cout << b << endl;
             b -> num -> ferma_with_shft(div1);
         }
         for (auto i = div1.begin(); i != div1.end();) {
