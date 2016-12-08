@@ -73,7 +73,7 @@ public:
 //private:
     BigNumber();
     BigNumber sqr();
-    BigNumber pow (BigNumber & degree, BigNumber & mod);
+    BigNumber pow (const BigNumber & degree, BigNumber & mod);
     BigNumber & barret (const BigNumber&, BigNumber&);
     BigNumber fmul (const BigNumber&);
     void fmul_car (const BigNumber&, BigNumber&);

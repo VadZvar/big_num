@@ -10,7 +10,8 @@ int main () {
         std::cout << *((*i) -> num) << "**" << (*i) -> degree << " * ";
     }
     std::cout << std::endl; */
-	BigNumber p = BigNumber::gen_prime(30);
+	//BigNumber p = BigNumber::gen_prime(30);
+    BigNumber p = 963920351;
     std::cout << "p = " << p << std::endl;
 	BigNumber g = BigNumber::prime_root(p);
     std::cout << "g = " << g << std::endl;
@@ -18,9 +19,11 @@ int main () {
     std::cout << "a = " << a << std::endl;
 	BigNumber d = a.discret_log(g, p);
     std::cout << "d = " << d << std::endl;
-	if (g.pow(d, p) == a) {
+    BigNumber r = g.pow(d, p);
+    std::cout << "r = " << r << std::endl;
+	if (r == a) {
 		std::cout << "correct" << std::endl;
-	} else std::cout << "nope" << std::endl;
+	} else std::cout << "not today" << std::endl;
 
 
     return 0;

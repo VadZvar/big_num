@@ -820,7 +820,7 @@ BigNumber BigNumber::sqr() {
     return *this * *this;
 }
 
-BigNumber BigNumber::pow(BigNumber & degree, BigNumber & mod) {
+BigNumber BigNumber::pow(const BigNumber & degree, BigNumber & mod) {
     BigNumber res(1), z(*this), num;
     base *end, *now, tmp;
     size_t size_mod = mod.en - mod.bn + 1;
@@ -836,19 +836,19 @@ BigNumber BigNumber::pow(BigNumber & degree, BigNumber & mod) {
             for (i = 0; i < BBITS; ++i, tmp >>= 1) {
                 if (tmp & 1) {
                     res = res * z;
-                    res = res.barret(mod, num);
-                    //res = res % mod;
+                    //res = res.barret(mod, num);
+                    res = res % mod;
                 }
                 z = z.sqr();
-                z.barret(mod, num);
-                //z = z % mod;
+                //z.barret(mod, num);
+                z = z % mod;
             }
         }
         else {
             for (i = 0; i < BBITS; ++i) {
                 z = z.sqr();
-                z.barret(mod, num);
-                //z = z % mod;
+                //z.barret(mod, num);
+                z = z % mod;
             }
         }
     }
@@ -1355,7 +1355,7 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
     //std::cout << "ex = " << ex << std::endl;
     auto m = n.sqrt();
     //std::cout << "n = " << n << std::endl;
-    std::cout << "m = " << n << std::endl;
+    std::cout << "m = " << m << std::endl;
     for (;;) {
         f_pollard(slow, *this, g, p, n);
         f_pollard(fast, *this, g, p, n);
@@ -1370,8 +1370,8 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
             }
             //std::cout << "tmp " << tmp << std::endl;
             r = tmp.gcd(n);
-            std::cout << "n = " << n << std::endl;
-            std::cout << "tmp = " << tmp << std::endl;
+            //std::cout << "n = " << n << std::endl;
+            //std::cout << "tmp = " << tmp << std::endl;
             std::cout << "r = " << r << std::endl;
             if (r.en == r.bn && *r.bn == 0) {
                 slow.y = BigNumber::gen_num_less_than(n);
@@ -1413,11 +1413,9 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
                 nn = n / r;
                 rev_tmp = tmp.inverse_mod(nn);
                  if (!fl) {
-                    //return ((((n + fast.y) - slow.y)) * rev_tmp) % nn;
-                    tmp = ((((n + fast.y) - slow.y)) * rev_tmp) % nn;
+                    tmp = ((((n + fast.y) - slow.y) / r) * rev_tmp) % nn;
                 } else {
-                    tmp = ((((n + slow.y) - fast.y)) * rev_tmp) % nn;
-                    //return ((((n + slow.y) - fast.y)) * rev_tmp) % nn;
+                    tmp = ((((n + slow.y) - fast.y) / r) * rev_tmp) % nn;
                 }
                 r = tmp;
                 std::cout << "r3 = " << r << std::endl;
