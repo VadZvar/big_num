@@ -1349,8 +1349,13 @@ void BigNumber::clean() {
 BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
     pol_tup slow(1, 0, 0), fast(1, 0, 0);
     BigNumber n = p - 1, tmp(0), rev_tmp(0), r(0), nn(0);
+    std::cout << "n1 = " << n << std::endl;
     bool fl;
-    BigNumber m = n.sqrt();
+    //auto ex = n.sqrt();
+    //std::cout << "ex = " << ex << std::endl;
+    auto m = n.sqrt();
+    //std::cout << "n = " << n << std::endl;
+    std::cout << "m = " << n << std::endl;
     for (;;) {
         f_pollard(slow, *this, g, p, n);
         f_pollard(fast, *this, g, p, n);
@@ -1363,15 +1368,17 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
                 fl = false;
                 tmp = slow.b - fast.b;
             }
-
+            //std::cout << "tmp " << tmp << std::endl;
             r = tmp.gcd(n);
             std::cout << "n = " << n << std::endl;
+            std::cout << "tmp = " << tmp << std::endl;
             std::cout << "r = " << r << std::endl;
             if (r.en == r.bn && *r.bn == 0) {
                 slow.y = BigNumber::gen_num_less_than(n);
                 slow.b = BigNumber::gen_num_less_than(n);
                 slow.x = g.pow(slow.y, p);
                 r = this -> pow(slow.b, p);
+                std::cout << "r1 = " << r << std::endl;
                 slow.x *= r;
                 slow.x = slow.x % p;
                 fast.x = slow.x;
@@ -1379,11 +1386,14 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
                 fast.b = slow.b;
                 continue;
             }
+            //std::cout << "~r = " << r << std::endl;
+            //std::cout << "ex2=" << ex << std::endl;
             if (r > m) {
                  slow.y = BigNumber::gen_num_less_than(n);
                  slow.b = BigNumber::gen_num_less_than(n);
                  slow.x = g.pow(slow.y, p);
                  r = this -> pow(slow.b, p);
+                 std::cout << "r2 = " << r << std::endl;
                  slow.x *= r;
                  slow.x = slow.x % p;
                  fast.x = slow.x;
@@ -1399,6 +1409,7 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
                 } else return ((((n + slow.y) - fast.y)) * rev_tmp) % n;
             } else {
                 tmp = tmp / r;
+                //std::cout << "tmp1 = " << tmp << std::endl;
                 nn = n / r;
                 rev_tmp = tmp.inverse_mod(nn);
                  if (!fl) {
@@ -1409,6 +1420,7 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
                     //return ((((n + slow.y) - fast.y)) * rev_tmp) % nn;
                 }
                 r = tmp;
+                std::cout << "r3 = " << r << std::endl;
                 for (;;) {
                     if (g.pow(tmp, p) == *this) {
                         return tmp;
@@ -1526,35 +1538,39 @@ BigNumber BigNumber::sqrt() {
     q -> en = q -> bn + a_size - 1;
 
     do {
+        //std::cout << "a = " << a << std::endl;
         a.light_copy(*q);
+        //std::cout << "q = " << *q << std::endl;
         BigNumber::div_mod(*this, a, q, nullptr);
+        //std::cout << "q2 = " << *q << std::endl;
         *q += a;
         *q >>= 1;
     } while (a > *q);
 
     delete q;
+    std::cout << "a11 = " << a << std::endl;
 
     return a;
 }
 
 void BigNumber::light_copy(BigNumber & b) {
-    base *tmp1, *tmp2;
+    base *tmp, *tmp2;
     
-    for (tmp1 = ba; tmp1 <= ea; ++tmp1) {
-        tmp1 = 0;
+    for (tmp = ba; tmp <= ea; ++tmp) {
+        *tmp = 0;
     }
 
-    for (tmp1 = ba, tmp2 = b.bn; tmp1 <= ea && tmp2 <= b.en; ++tmp1, ++tmp2) {
-        *tmp1 = *tmp2;
+    for (tmp = ba, tmp2 = b.bn; tmp <= ea && tmp2 <= b.en; ++tmp, ++tmp2) {
+        *tmp = *tmp2;
     }
 
     bn = ba;
 
-    if (tmp1 > ea && tmp2 <= b.en) {
+    if (tmp > ea && tmp2 <= b.en) {
         throw "not light";
     }
 
-    en = tmp1 - 1;
+    en = tmp - 1;
 }
 
 BigNumber BigNumber::pow(base n) {
@@ -1862,7 +1878,7 @@ BigNumber_d BigNumber::factor() {
         a >>= (shft & (BBITS - 1));
         div.push_back(new BP(new BigNumber(2), shft));
     }
-    std::cout << a << std::endl;
+    //std::cout << a << std::endl;
     if (a.en == a.bn && *(a.bn) == 1) {
         return div;
     }
