@@ -16,7 +16,7 @@
 #define CAR_BORDER 50
 #define MR_REL_PARAM 10
 #define TRIAL_BORDER_SIZE ((int)2)
-#define TRIAL_BORDER 100
+#define TRIAL_BORDER 1000000
 #define ERATE_BORDER ((int)10000)
 #define FERMA_BASE 10
 #define B_STEP 100
@@ -44,7 +44,7 @@ public:
     BigNumber & operator=(const BigNumber&);
     static BigNumber * get_degree_two(size_t, size_t);
     static void div_mod (const BigNumber& a, base b, BigNumber * q, base * r);
-    static void div_mod (BigNumber&, BigNumber&, BigNumber *, BigNumber *);
+    static void div_mod (const BigNumber&, BigNumber&, BigNumber *, BigNumber *);
     bool operator < (const BigNumber&) const;
     bool operator > (const BigNumber&) const;
     bool operator >= (const BigNumber&) const;

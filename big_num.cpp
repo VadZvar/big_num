@@ -533,7 +533,7 @@ void BigNumber::div_mod(const BigNumber& a, base b, BigNumber *q, base *r) {
 
     if (size_a == 1) {
         base old  = (*a.bn);
-        if (old) {
+        if (*(a.bn)) {
             if (q) {
                 q -> en = q -> bn;
                 *(q -> bn) = old / b;
@@ -560,16 +560,16 @@ void BigNumber::div_mod(const BigNumber& a, base b, BigNumber *q, base *r) {
     for (int j = size_a - 1; j >= 0; --j) {
         buffer = (buffer << BBITS) | a.bn[j];
         tmp = buffer / (dbase)b;
-        if (q) q -> bn[j] = (dbase)tmp;
+        if (q) q -> bn[j] = (base)tmp;
         buffer = buffer - (dbase)b * tmp;
     }
 
     if (r) {
-        *r = (dbase)buffer;
+        *r = (base)buffer;
     }
 
     if (q) {
-        if (q -> bn[size_a - 1] != 0) {
+        if ((q -> bn)[size_a - 1] != 0) {
             q -> en = q -> bn + size_a - 1;
         }
         else q -> en = q -> bn + size_a - 2;
@@ -702,7 +702,7 @@ std::ostream & operator << (std::ostream& out, const BigNumber& b) {
     return out;
 }
 
-void BigNumber::div_mod (BigNumber& a, BigNumber& b, BigNumber *q, BigNumber *r) {
+void BigNumber::div_mod (const BigNumber& a, BigNumber& b, BigNumber *q, BigNumber *r) {
     if (b == 0) throw "division on zero";
     
     int i, count = 0, c1 = BBITS - 1;
@@ -758,7 +758,7 @@ void BigNumber::div_mod (BigNumber& a, BigNumber& b, BigNumber *q, BigNumber *r)
         qhat = ((((dbase)u.bn[size_b]) << BBITS) + u.bn[size_b - 1]);
         rhat = qhat % (*b.en);
         qhat /= (*b.en);
-        for (; rhat < c2 && qhat *(*(b.en - 1)) > (rhat << BBITS) + u.bn[size_b + 2];) {
+        for (; rhat < c2 && qhat *(*(b.en - 1)) > (rhat << BBITS) + u.bn[size_b - 2];) {
             --qhat;
             rhat += *(b.en);
         }
@@ -789,7 +789,7 @@ void BigNumber::div_mod (BigNumber& a, BigNumber& b, BigNumber *q, BigNumber *r)
     if (q) {
         ++q1;
         q -> bn = q1;
-        for (; !*(q -> en); --q -> en);
+        for (; !*(q -> en); q -> en--);
     }
   }
 }
@@ -833,7 +833,7 @@ BigNumber BigNumber::pow(const BigNumber & degree, BigNumber & mod) {
     for (now = degree.bn; now <= degree.en; ++now) {
         tmp = *now;
         if (tmp) {
-            for (i = 0; i < BBITS; ++i, tmp >>= 1) {
+            for (i = 0; i < sizeof(tmp) * 8; ++i, tmp >>= 1) {
                 if (tmp & 1) {
                     res = res * z;
                     //res = res.barret(mod, num);
@@ -845,7 +845,7 @@ BigNumber BigNumber::pow(const BigNumber & degree, BigNumber & mod) {
             }
         }
         else {
-            for (i = 0; i < BBITS; ++i) {
+            for (i = 0; i < sizeof(tmp) * 8; ++i) {
                 z = z.sqr();
                 //z.barret(mod, num);
                 z = z % mod;
@@ -1368,7 +1368,7 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
                 fl = false;
                 tmp = slow.b - fast.b;
             }
-            //std::cout << "tmp " << tmp << std::endl;
+            std::cout << "tmp " << tmp << std::endl;
             r = tmp.gcd(n);
             //std::cout << "n = " << n << std::endl;
             //std::cout << "tmp = " << tmp << std::endl;
@@ -1409,13 +1409,17 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
                 } else return ((((n + slow.y) - fast.y)) * rev_tmp) % n;
             } else {
                 tmp = tmp / r;
-                //std::cout << "tmp1 = " << tmp << std::endl;
+                std::cout << "tmp1 = " << tmp << std::endl;
                 nn = n / r;
+		        std::cout << "nn = " << nn << std::endl;
                 rev_tmp = tmp.inverse_mod(nn);
+		        std::cout << "fl = " << fl << std::endl;
                  if (!fl) {
                     tmp = ((((n + fast.y) - slow.y) / r) * rev_tmp) % nn;
+			        std::cout << "tmp2 = " << tmp << std::endl;
                 } else {
                     tmp = ((((n + slow.y) - fast.y) / r) * rev_tmp) % nn;
+			        std::cout << "tmp3 = " << tmp << std::endl;
                 }
                 r = tmp;
                 std::cout << "r3 = " << r << std::endl;
@@ -1424,8 +1428,10 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
                         return tmp;
                     }
                     tmp += nn;
+			        std::cout << "tmp4 = " << tmp << std::endl;
                     if (tmp > n) {
                         tmp = tmp % n;
+			        std::cout << "tmp5 = " << tmp << std::endl;
                     }
                     if (tmp == r) {
                         throw "nope";
@@ -1435,6 +1441,8 @@ BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
         }
     }
 }
+
+
 
 void BigNumber::f_pollard(pol_tup & tup, BigNumber & a, BigNumber & g, BigNumber & p, BigNumber & n) {
     base c = tup.x % 3;
@@ -1951,6 +1959,11 @@ BigNumber BigNumber::prime_root(BigNumber & p) {
 	BigNumber n = p - 1;
 	BigNumber a = BigNumber::gen_num_less_than(n);
 	BigNumber_d div = n.factor();
+    std::cout << "factor =  ";
+        for (auto &x: div)
+            std::cout << &x << ' ';
+        std::cout << std::endl;
+
 	BigNumber e(n.en - n.bn + 1, 0);
 	BigNumber b;
 
