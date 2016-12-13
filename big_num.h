@@ -115,7 +115,36 @@ public:
 	static BigNumber prime_root(BigNumber &);
 };
 
-struct BP {
+struct BP{
+	BigNumber * num;
+	uint degree;
+	BP(BigNumber * n = nullptr, uint deg = 0){
+		degree = deg;
+		num = n;
+	}
+	~BP(){
+		if(num){
+			delete num;
+		}
+	}
+	static bool cmp(BP * x, BP * y){
+		return *(x -> num) < *(y -> num);
+	}
+};
+bool cmpBP(BP * x, BP * y);
+
+
+struct P{
+	base num;
+	uint degree;
+	P(base n, uint deg = 0){
+		degree = deg;
+		num = n;
+	}
+	~P(){}
+};
+
+/*struct BP {
     BigNumber *num;
     uint degree;
 
@@ -140,6 +169,19 @@ struct pol_tup {
     pol_tup(BigNumber & a, BigNumber & z, BigNumber &c):x(a), y(z), b(c) {}
     pol_tup(base a, base z, base c):x(a), y(z), b(c) {}
     ~pol_tup(){}
+};*/
+
+struct pol_tup{
+	BigNumber x;
+	BigNumber y;
+	BigNumber b;
+	pol_tup():x(0),y(0),b(0){
+	}
+	pol_tup(BigNumber & a, BigNumber & z, BigNumber & c):x(a), y(z), b(c){
+	}
+	pol_tup(base a, base z, base c):x(a), y(z), b(c){
+	}
+	~pol_tup(){}
 };
 
 #endif
