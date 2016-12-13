@@ -16,7 +16,7 @@
 #define CAR_BORDER 50
 #define MR_REL_PARAM 10
 #define TRIAL_BORDER_SIZE ((int)2)
-#define TRIAL_BORDER 1000000
+#define TRIAL_BORDER 1000
 #define ERATE_BORDER ((int)10000)
 #define FERMA_BASE 10
 #define B_STEP 100

@@ -1396,7 +1396,6 @@ BigNumber * BigNumber::next_d(BigNumber *d) {
 			throw "bad d";
 		}
     } else {
-        oe = false;
         return new BigNumber(3);
     }
 }
@@ -1807,7 +1806,7 @@ bool BigNumber::p_1_pollard(BigNumber_d & div, base B, base lim) {
     generate_base_less_border(primes, B);
 
     for (; !(mask & *en); --shft, mask >>= 1);
-    log_2_n = size_n * BBITS + shft;
+    log_2_n = (size_n * BBITS + shft;
 
     for(;;) {
         a = BigNumber::gen_num_less_than(n_m);
@@ -2036,10 +2035,10 @@ BigNumber_d BigNumber::factor() {
     BigNumber a(*this);
     if (!((*(a.bn) & 1))) {
         uint shft = 0;
-        for (;*(a.bn) == 0 && a.bn < a.en; shft  += BBITS, ++(a.bn));
+        for (;*(a.bn) == 0; shft  += BBITS, ++(a.bn));
         base tmp = *(a.bn);
-        for (; (tmp & 1) == 0; ++shft, tmp >>= 1);
-        a >>= (shft & (BBITS - 1));
+        for (; (tmp & 1) == 0; ++shft, tmp >>= 1);//пока не встретим 1, количество shft означает степень 2 в разложении числа
+        a >>= (shft & (BBITS - 1));//остаток шифта на 32, количество 0 которые нужно убрать в первой ненулевой базе
         div.push_back(new BP(new BigNumber(2), shft));
     }
     //std::cout << a << std::endl;

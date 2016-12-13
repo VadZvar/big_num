@@ -3,7 +3,7 @@
 int main() {
     int n;
     //std::cin >> n;
-	BigNumber b = BigNumber::gen_num_with_bits(30);
+	BigNumber b = BigNumber::gen_num_with_bits(60);
 	//BigNumber b = 734890318;
     std::cout << b << std::endl;
 	BigNumber_d d = b.factor();
