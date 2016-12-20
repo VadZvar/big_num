@@ -10,8 +10,8 @@ int main () {
         std::cout << *((*i) -> num) << "**" << (*i) -> degree << " * ";
     }
     std::cout << std::endl; */
-	//BigNumber p = BigNumber::gen_prime(30);
-    BigNumber p = 963920351;
+	BigNumber p = BigNumber::gen_prime(40);
+    //BigNumber p = 963920351;
     std::cout << "p = " << p << std::endl;
 	BigNumber g = BigNumber::prime_root(p);
     std::cout << "g = " << g << std::endl;

@@ -356,7 +356,9 @@ BigNumber & BigNumber::operator -= (const BigNumber& b) {
     }
     if (new_size > size_b) {
         if (new_size > b.ea - b.ba + 1) {
-            base * a = new base[new_size];
+            base * a = new base[new_size];std::cout << "tupx1 = " << tup.x << std::endl;
+        std::cout << "assert tupx1 == tupx**2" << std::endl;	
+    
             if(!a) throw ALLOC_ERR;
             for (i = 0; i < size_b; ++i) {
                 a[i] = b.bn[i];
@@ -537,13 +539,13 @@ BigNumber BigNumber::operator << (int num) const {
     BigNumber res(*this);
 
     mask = BASE_MASK(num);
-    for (int i = 0; i >= en - bn + 1; ++i) {
+    for (int i = 0; i < en - bn + 1; ++i) {
         buffer = (res.bn[i] >> (BBITS - num)) & mask;
         res.bn[i] = (res.bn[i] << num) | prev_buffer;
         prev_buffer = buffer;
     }
 
-    if (!(*res.en) && res.en != res.bn) {
+    if (prev_buffer) {
         BigNumber::ReSize(res, en - bn + 2);
         ++res.en;
         *res.en = prev_buffer;
@@ -1506,9 +1508,9 @@ void BigNumber::clean() {
 
 BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 	pol_tup slow(1,0,0), fast(1,0,0);
-	BigNumber n = p - 1, tmp(0), r(0), rev_tmp(0), nn(0);
+	BigNumber n = p - 1, tmp(0), r(0), rev_tmp(0), nn(0), d;
 	bool fl;
-	BigNumber m = n.sqrt();
+	//BigNumber m = n.sqrt();
 	for(;;){
 		f_pollard(slow, *this, g, p, n);
 		f_pollard(fast, *this, g, p, n);
@@ -1521,7 +1523,11 @@ BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 				fl = false;
 				tmp = slow.b - fast.b;
 			}
-			r = tmp.gcd(n);
+            std::cout << "sb = " << slow.b << std::endl;
+            std::cout << "sy = " << slow.y << std::endl;
+            std::cout << "fb = " << fast.b << std::endl;
+            std::cout << "fy = " << fast.y << std::endl;
+			r = tmp % n;
 			std::cout << "n = " << n << std::endl;
 			std::cout << "r = " << r << std::endl;
 			if(r.en == r.bn && *r.bn == 0){
@@ -1536,7 +1542,8 @@ BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 				fast.b = slow.b;
 				continue;
 			}
-			if(r > m){
+            d = r.gcd(n);
+			/*if(r > m){
 				slow.y = BigNumber::gen_num_less_than(n);
 				slow.b = BigNumber::gen_num_less_than(n);
 				slow.x = g.pow(slow.y, p);
@@ -1547,9 +1554,9 @@ BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 				fast.y = slow.y;
 				fast.b = slow.b;
 				continue;
-			}
+			}*/
 			
-			if(r.en == r.bn && *r.bn == 1){
+			if(d.en == d.bn && *d.bn == 1){
 				rev_tmp = tmp.inverse_mod(n);
 				if(!fl){
 					return ((((n + fast.y) - slow.y)) * rev_tmp) % n; 
@@ -1557,14 +1564,14 @@ BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 					return ((((n + slow.y) - fast.y)) * rev_tmp) % n;
 				}
 			} else {
-				tmp = tmp / r;
-				nn = n / r;
+				tmp = tmp / d;
+				nn = n / d;
 				rev_tmp = tmp.inverse_mod(nn);
 				if(!fl){
 					
-					tmp = ((((n + fast.y) - slow.y) / r) * rev_tmp) % nn; 
+					tmp = ((((n + fast.y) - slow.y) / d) * rev_tmp) % nn; 
 				}else {
-					tmp = ((((n + slow.y) - fast.y) / r) * rev_tmp) % nn;
+					tmp = ((((n + slow.y) - fast.y) / d) * rev_tmp) % nn;
 				}
 				r = tmp;
 				for(;;){
@@ -1603,18 +1610,26 @@ BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 
 void BigNumber::f_pollard(pol_tup & tup, BigNumber & a, BigNumber & g, BigNumber & p, BigNumber & n){
 	base c = tup.x % 3;
+    //std::cout << "tupx = " << tup.b << " % (p - 1)"<< std::endl;
 	if(c == 1){
 		tup.x = (tup.x * a) % p;
-		tup.b = (tup.b + 1) % n;
-	} else if(c == 2){
+        tup.b = (tup.b + 1) % n;
+	    //std::cout << "tupx1 = " << tup.b << std::endl;
+        //std::cout << "assert tupx1 == (tupx + 1) \% (p - 1)" << std::endl;	
+    } else if(c == 2){
 		tup.x = tup.x.sqr() % p;
-		tup.y = (tup.y << 1) % n;
-		tup.b = (tup.b << 1) % n;
-	} else {
+		tup.y = (tup.y * 2) % n;
+		tup.b = (tup.b * 2) % n;
+	    //std::cout << "tupx1 = " << tup.b << std::endl;
+        //std::cout << "assert tupx1 == (tupx << 1) \% (p - 1)" << std::endl;	
+    } else {
 		tup.x = (tup.x * g) % p;
 		tup.y = (tup.y + 1) % n;
-	}
-}
+	    //std::cout << "tupx1 = " << tup.x << std::endl;
+        //std::cout << "assert tupx1 == (tupx*g) \% p" << std::endl;	
+    }
+} 
+  
 
 BigNumber BigNumber::gcd(BigNumber & n) {
     base *tmp;
@@ -1711,7 +1726,7 @@ BigNumber BigNumber::sqrt() {
     } while (a > *q);
 
     delete q;
-    std::cout << "a11 = " << a << std::endl;
+    //std::cout << "a11 = " << a << std::endl;
 
     return a;
 }
@@ -1806,7 +1821,7 @@ bool BigNumber::p_1_pollard(BigNumber_d & div, base B, base lim) {
     generate_base_less_border(primes, B);
 
     for (; !(mask & *en); --shft, mask >>= 1);
-    log_2_n = (size_n * BBITS + shft;
+    log_2_n = (size_n - 1) * BBITS + shft;
 
     for(;;) {
         a = BigNumber::gen_num_less_than(n_m);
@@ -1873,7 +1888,7 @@ bool BigNumber::ferma_with_shft(BigNumber_d &div) {
 
     if (x.sqr() == *this) {
         div.push_back(new BP(new BigNumber(x), 2));
-        return false;
+        return true;
     }
 
     x += 1;
@@ -1901,7 +1916,7 @@ bool BigNumber::ferma_with_shft(BigNumber_d &div) {
                 for (auto si = s.begin(); si != s.end(); ++si) {
                     delete *si;
                 }
-                return false;
+                return true;
             }
         }
 
@@ -1910,7 +1925,7 @@ bool BigNumber::ferma_with_shft(BigNumber_d &div) {
             for (auto si = s.begin(); si != s.end(); ++si) {
                 delete *si;
             }
-            return true;
+            return false;
         }
 
         for (auto i = ki.begin(), it = primes.begin(); i != ki.end() && it != primes.end(); ++i, ++it){
@@ -2070,6 +2085,7 @@ BigNumber_d BigNumber::factor() {
     b -> num = nullptr;
     delete b;
     std::queue<BP *> q;
+    q.push(new BP(num, 1));
     BigNumber_d div1;
 
     for (; !q.empty();) {
@@ -2081,6 +2097,8 @@ BigNumber_d BigNumber::factor() {
             b -> num -> ferma_with_shft(div1);
         }
         for (auto i = div1.begin(); i != div1.end();) {
+            //разложили основание b, чтобы учесть ещё степень b, нужно умножить ст. делителей на ст. b
+            (*i) -> degree *= b -> degree;
             if ((*i) -> num -> is_prime()) {
                 div.push_back(*i);
             } else {
@@ -2116,10 +2134,6 @@ BigNumber BigNumber::prime_root(BigNumber & p) {
 	BigNumber n = p - 1;
 	BigNumber a = BigNumber::gen_num_less_than(n);
 	BigNumber_d div = n.factor();
-    std::cout << "factor =  ";
-        for (auto &x: div)
-            std::cout << &x << ' ';
-        std::cout << std::endl;
 
 	BigNumber e(n.en - n.bn + 1, 0);
 	BigNumber b;
