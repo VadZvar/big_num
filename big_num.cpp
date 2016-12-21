@@ -1410,102 +1410,6 @@ void BigNumber::clean() {
     bn = en = ba;
 }
 
-/*BigNumber BigNumber::discret_log(BigNumber &g, BigNumber &p) {
-    pol_tup slow(1, 0, 0), fast(1, 0, 0);
-    BigNumber n = p - 1, tmp(0), rev_tmp(0), r(0), nn(0);
-    //std::cout << "n1 = " << n << std::endl;
-    bool fl;
-    //auto ex = n.sqrt();
-    //std::cout << "ex = " << ex << std::endl;
-    BigNumber m = n.sqrt();
-    //std::cout << "n = " << n << std::endl;
-    std::cout << "m = " << m << std::endl;
-    for (;;) {
-        f_pollard(slow, *this, g, p, n);
-        f_pollard(fast, *this, g, p, n);
-        f_pollard(fast, *this, g, p, n);
-        if (fast.x == slow.x) {
-            if (fast.b > slow.b) {
-                fl = true;
-                tmp = fast.b - slow.b;
-            } else {
-                fl = false;
-                tmp = slow.b - fast.b;
-            }
-            //std::cout << "tmp " << tmp << std::endl;
-            r = tmp.gcd(n);
-            //std::cout << "n = " << n << std::endl;
-            //std::cout << "tmp = " << tmp << std::endl;
-            std::cout << "r = " << r << std::endl;
-            if (r.en == r.bn && *r.bn == 0) {
-                slow.y = BigNumber::gen_num_less_than(n);
-                slow.b = BigNumber::gen_num_less_than(n);
-                slow.x = g.pow(slow.y, p);
-                r = this -> pow(slow.b, p);
-                std::cout << "r1 = " << r << std::endl;
-                slow.x *= r;
-                slow.x = slow.x % p;
-                fast.x = slow.x;
-                fast.y = slow.y;
-                fast.b = slow.b;
-                continue;
-            }
-            //std::cout << "~r = " << r << std::endl;
-            //std::cout << "ex2=" << ex << std::endl;
-            if (r > m) {
-                 slow.y = BigNumber::gen_num_less_than(n);
-                 slow.b = BigNumber::gen_num_less_than(n);
-                 slow.x = g.pow(slow.y, p);
-                 r = this -> pow(slow.b, p);
-                 std::cout << "r2 = " << r << std::endl;
-                 slow.x *= r;
-                 slow.x = slow.x % p;
-                 fast.x = slow.x;
-                 fast.y = slow.y;
-                 fast.b = slow.b;
-                 continue;
-            }
-
-            if (r.en == r.bn && *r.bn == 1) {
-                rev_tmp = tmp.inverse_mod(n);
-                if (!fl) {
-                    return ((((n + fast.y) - slow.y)) * rev_tmp) % n;
-                } else return ((((n + slow.y) - fast.y)) * rev_tmp) % n;
-            } else {
-                tmp = tmp / r;
-                //std::cout << "tmp1 = " << tmp << std::endl;
-                nn = n / r;
-		        //std::cout << "nn = " << nn << std::endl;
-                rev_tmp = tmp.inverse_mod(nn);
-		        //std::cout << "fl = " << fl << std::endl;
-                 if (!fl) {
-                    tmp = ((((n + fast.y) - slow.y) / r) * rev_tmp) % nn;
-			        std::cout << "tmp2 = " << tmp << std::endl;
-                } else {
-                    tmp = ((((n + slow.y) - fast.y) / r) * rev_tmp) % nn;
-			        std::cout << "tmp3 = " << tmp << std::endl;
-                }
-                r = tmp;
-                std::cout << "r3 = " << r << std::endl;
-                for (;;) {
-                    if (g.pow(tmp, p) == *this) {
-                        return tmp;
-                    }
-                    tmp += nn;
-			        std::cout << "tmp4 = " << tmp << std::endl;
-                    if (tmp > n) {
-                        tmp = tmp % n;
-			        std::cout << "tmp5 = " << tmp << std::endl;
-                    }
-                    if (tmp == r) {
-                        throw "nope";
-                    }
-                }
-            }
-        }
-    }
-}*/
-
 BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 	pol_tup slow(1,0,0), fast(1,0,0);
 	BigNumber n = p - 1, tmp(0), r(0), rev_tmp(0), nn(0), d;
@@ -1523,13 +1427,13 @@ BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 				fl = false;
 				tmp = slow.b - fast.b;
 			}
-            std::cout << "sb = " << slow.b << std::endl;
-            std::cout << "sy = " << slow.y << std::endl;
-            std::cout << "fb = " << fast.b << std::endl;
-            std::cout << "fy = " << fast.y << std::endl;
+            //std::cout << "sb = " << slow.b << std::endl;
+            //std::cout << "sy = " << slow.y << std::endl;
+            //std::cout << "fb = " << fast.b << std::endl;
+            //std::cout << "fy = " << fast.y << std::endl;
 			r = tmp % n;
-			std::cout << "n = " << n << std::endl;
-			std::cout << "r = " << r << std::endl;
+			//std::cout << "n = " << n << std::endl;
+			//std::cout << "r = " << r << std::endl;
 			if(r.en == r.bn && *r.bn == 0){
 				slow.y = BigNumber::gen_num_less_than(n);
 				slow.b = BigNumber::gen_num_less_than(n);
@@ -1579,7 +1483,7 @@ BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 						return tmp;
 					}
 					tmp += nn;
-					std::cout << "tmp1 = " << tmp << std::endl;
+					//std::cout << "tmp1 = " << tmp << std::endl;
 					if(tmp > n){
 						tmp = tmp % n;
 					}
@@ -1593,20 +1497,6 @@ BigNumber BigNumber::discret_log(BigNumber & g, BigNumber & p){
 	}
 }
 
-/*void BigNumber::f_pollard(pol_tup & tup, BigNumber & a, BigNumber & g, BigNumber & p, BigNumber & n) {
-    base c = tup.x % 3;
-    if (c == 1) {
-        tup.x = (tup.x * a) % p;
-        tup.b = (tup.b + 1) % n;
-    } else if (c == 2) {
-        tup.x = tup.x.sqr() % p;
-        tup.y = (tup.y << 1) % n;
-        tup.b = (tup.b << 1) % n;
-    } else {
-        tup.x = (tup.x * g) % p;
-        tup.y = (tup.y + 1) % n;
-    }
-}*/
 
 void BigNumber::f_pollard(pol_tup & tup, BigNumber & a, BigNumber & g, BigNumber & p, BigNumber & n){
 	base c = tup.x % 3;
@@ -2066,10 +1956,6 @@ BigNumber_d BigNumber::factor() {
 
     if (a.trial_div(div, *border)) {
         delete border;
-        //std::cout << "nachalo ";
-        //for (auto &x: div)
-         //   std::cout << x << ' ';
-        //std::cout << std::endl;
         return div;
     }
 
